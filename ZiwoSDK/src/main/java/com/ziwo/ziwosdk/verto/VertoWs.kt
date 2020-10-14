@@ -1,4 +1,4 @@
-package com.ziwo.agent.utils.ziwoSdk.verto
+package com.ziwo.ziwosdk.utils.ziwoSdk.verto
 
 import android.content.Context
 import android.util.Log

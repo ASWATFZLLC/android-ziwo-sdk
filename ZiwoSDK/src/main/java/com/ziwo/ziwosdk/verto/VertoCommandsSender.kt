@@ -1,4 +1,4 @@
-package com.ziwo.agent.utils.ziwoSdk.verto
+package com.ziwo.ziwosdk.utils.ziwoSdk.verto
 
 import android.util.Log
 import com.google.gson.Gson

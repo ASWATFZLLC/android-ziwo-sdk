@@ -3,7 +3,7 @@ package com.ziwo.ziwosdk
 import android.content.Context
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import com.ziwo.ziwosdk.socketApi.ZiwoWsApi
-import com.ziwo.agent.utils.ziwoSdk.verto.VertoWs
+import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoWs
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
