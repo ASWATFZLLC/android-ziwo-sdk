@@ -1,0 +1,2 @@
+include ':ZiwoSDK'
+rootProject.name = "Ziwo SDK"

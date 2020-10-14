@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ZiwoSDK/ZiwoSDK.iml" filepath="$PROJECT_DIR$/.idea/modules/ZiwoSDK/ZiwoSDK.iml" group="Ziwo SDK/ZiwoSDK" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" filepath="$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" group="Ziwo_SDK" />
+    </modules>
+  </component>
+</project>
