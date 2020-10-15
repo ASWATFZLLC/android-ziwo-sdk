@@ -12,7 +12,7 @@ class VertoCommandsSender
     ( var vertoWs: VertoWs)
 {
 
-    val VERTO_TAG = "[ZIWO SDK] WebSocketCommandsSender "
+    val VERTO_TAG = "[ZIWOSDK] WebSocketCommandsSender"
     var messageId = 0
 
     val gson = Gson()

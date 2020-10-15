@@ -3,14 +3,39 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
-apply plugin: 'com.jfrog.bintray'
+apply from: "$project.rootDir/tools/script-git-version.gradle"
+
+ext {
+    bintrayRepo = 'ziwosdk' // Repo name in bintray dashboard
+    bintrayName = 'com.ziwo.ziwosdk' // package name of the bintray repo
+
+    publishedGroupId = 'com.ziwo.ziwosdk'   // this is the ID we want to see in implementation line
+    libraryName = 'ziwosdk'     // this is the module name of library
+    artifact = 'ziwosdk'        // this is the artifact we want to see in implementation line
+
+    libraryDescription = 'Ziwo\'s android sdk library to access the various API points' // description of library
+
+    siteUrl = 'https://github.com/ASWATFZLLC/android-ziwo-sdk'    // git repo url
+    gitUrl = 'https://github.com/ASWATFZLLC/android-ziwo-sdk.git' // git repo vcs url
+
+    libraryVersion = appVersionName      // library version
+
+    developerId = 'nofalx'                // This is your bintray username
+    developerName = 'Ahmad Nofal'              // Developer's name
+    developerEmail = 'nofal.ahmad@outlook.com'                // Developer's email
+
+    licenseName = 'GPL v3'  // for example, The Apache Software License, Version 2.0
+    licenseUrl = 'https://opensource.org/licenses/GPL-3.0'   // for example, http://www.apache.org/licenses/LICENSE-2.0.txt
+    allLicenses = ["GPL-3.0"]    // array of licenses, for example, ["Apache-2.0"]
+}
+
 
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.1"
 
     defaultConfig {
-        minSdkVersion 22
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -51,3 +76,10 @@ dependencies {
     kapt 'com.google.dagger:hilt-android-compiler:2.28.3-alpha'
     kapt 'androidx.hilt:hilt-compiler:1.0.0-alpha02'
 }
+
+// Avoid Kotlin docs error
+tasks.withType(Javadoc).all {
+    enabled = false
+}
+
+apply from: 'publish.gradle'
