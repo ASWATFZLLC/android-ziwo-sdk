@@ -21,4 +21,8 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew install
     - name: Upload to jcenter
+      env:
+        BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+        BINTRAY_ORG: ${{ secrets.BINTRAY_ORG }}
+        BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
       run: ./gradlew bintrayUpload
