@@ -1,4 +1,4 @@
-name: Android CI to JCenter
+name: Publish to Jcenter
 on:
   push:
     tags:
