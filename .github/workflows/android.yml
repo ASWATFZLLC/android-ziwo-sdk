@@ -22,13 +22,12 @@ jobs:
         BINTRAY_ORG: ${{ secrets.BINTRAY_ORG }}
         BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
       run: ./gradlew bintrayUpload
-    - name: set up AWS CLI
+    - name: Build documentation
+      run: ./gradlew :docs:orchidBuild
+    - name: set up AWS CLI and deploy docs
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: eu-west-1
-    - name: Build documentation
-      run: ./gradlew :docs:orchidBuild
-    - name: Deploy docs
-      if: ${{ always() }}
-      run: aws s3 sync ./docs/build/ s3://ziwo/android-ziwo-sdk/
+        run: aws s3 sync ./docs/build/ s3://ziwo/android-ziwo-sdk/
+
