@@ -22,8 +22,10 @@ jobs:
         BINTRAY_ORG: ${{ secrets.BINTRAY_ORG }}
         BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
       run: ./gradlew bintrayUpload
+      
     - name: Build documentation
       run: ./gradlew :docs:orchidBuild
+      
     - name: set up AWS CLI and deploy docs
       uses: aws-actions/configure-aws-credentials@v1
       with:
