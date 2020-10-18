@@ -1,0 +1,21 @@
+
+$ThemeColor: #ad3278;
+$LightGray: #dedede;
+$BorderColor: #bbb;
+
+.section-level-2{
+    border: solid 1px $BorderColor;
+    border-radius: .3em;
+    margin: 1em;
+
+    .section-name, .section-name strong{
+      background: $LightGray;
+      color: $ThemeColor;
+      padding: 1em;
+    }
+
+    .sourcedoc-section{
+      padding: 1em;
+      border-bottom: 1px solid $BorderColor;
+    }
+}

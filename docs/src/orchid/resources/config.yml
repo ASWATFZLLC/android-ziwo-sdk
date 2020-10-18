@@ -1,0 +1,42 @@
+site:
+  about:
+    siteName: Ziwo Android SDK
+    siteDescription: The documentation for the Ziwo's SDK
+Editorial:
+  primaryColor: '#ad3278'
+  extraCss:
+    - 'assets/css/global.scss'
+  social:
+    github: 'ASWATFZLLC/android-ziwo-sdk'
+  metaComponents:
+    - type: 'orchidSearch'
+  menu:
+#    - type: 'separator'
+#      title: 'Wiki'
+#    - type: 'wiki'
+#    - type: 'separator'
+#      title: 'API Docs'
+    - type: 'page'
+      itemId: 'home'
+
+    - type: 'sourcedocPages'
+      moduleType: 'kotlindoc'
+      node: 'packages'
+      asSubmenu: true
+      submenuTitle: 'Packages'
+    - type: 'sourcedocPages'
+      moduleType: 'kotlindoc'
+      node: 'classes'
+      asSubmenu: true
+      submenuTitle: 'Classes'
+
+kotlindoc:
+  sourceDirs:
+    - '../../../../ZiwoSDK/src/main/java'
+  pages:
+    extraCss:
+      - 'assets/css/orchidKotlindoc.scss'
+      - 'assets/css/night-owl.10.3.1.min.css'
+    extraJs:
+      - 'assets/js/highlight10.3.1.min.js'
+      - 'assets/js/highlightHelper.js'

@@ -83,7 +83,6 @@ class ZiwoApi @Inject constructor() {
      */
     fun login(callCenter: String, userName: String, userPassword: String): ZiwoApiLoginContentData {
 
-        // TODO: remove call center or make it optional
         baseUrl  = "https://$callCenter-api.aswat.co"
 
         val formBody: RequestBody =
@@ -109,7 +108,6 @@ class ZiwoApi @Inject constructor() {
             throw UserIsAdminException("attempt login with non agent type user")
         }
 
-        print ("accesstoken $${bodyParsed.content.access_token}")
         accessToken = bodyParsed.content.access_token
 
         return bodyParsed.content

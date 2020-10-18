@@ -14,7 +14,7 @@ class Ziwo  @Inject constructor(
 )  {
 
     // class logic
-    private val TAG = "ZiwoMotherClient"
+    private val TAG = "ZiwoSDK"
     @Inject lateinit var ziwoApiClient: ZiwoApi
     public var vertoWs = VertoWs(context, this)
     public var ziwoApiWs = ZiwoWsApi(context, this)
