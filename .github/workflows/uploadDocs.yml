@@ -1,4 +1,4 @@
-name: Android CI to JCenter
+name: Build docs and upload to S3
 on:
   push:
     tags:
