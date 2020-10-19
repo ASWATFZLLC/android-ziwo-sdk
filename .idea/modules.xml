@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ZiwoSDK/ZiwoSDK.iml" filepath="$PROJECT_DIR$/.idea/modules/ZiwoSDK/ZiwoSDK.iml" group="Ziwo SDK/ZiwoSDK" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" filepath="$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" group="Ziwo_SDK" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/docs/docs.iml" filepath="$PROJECT_DIR$/.idea/modules/docs/docs.iml" group="Ziwo SDK/docs" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" filepath="$PROJECT_DIR$/.idea/modules/Ziwo_SDK.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ZiwoSDK/Ziwo_SDK.ZiwoSDK.iml" filepath="$PROJECT_DIR$/.idea/modules/ZiwoSDK/Ziwo_SDK.ZiwoSDK.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/docs/Ziwo_SDK.docs.iml" filepath="$PROJECT_DIR$/.idea/modules/docs/Ziwo_SDK.docs.iml" />
     </modules>
   </component>
 </project>

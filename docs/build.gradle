@@ -21,8 +21,9 @@ repositories {
 orchid {
     theme = "Editorial"
     baseUrl = "https://username.github.io/project"
-    version = "1.0.0"
     destDir = "$buildDir/"
+    version = "${project.version}"
+    baseUrl = "https://sdk.ziwo.io/android"
+    //srcDir  = "src/orchid/resources"
 }
 
-    //srcDir  = "src/orchid/resources"
