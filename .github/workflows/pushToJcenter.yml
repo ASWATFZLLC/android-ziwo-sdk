@@ -1,17 +1,11 @@
-name: Android CI to JCenter
-
+name: Publish to Jcenter
 on:
   push:
     tags:
       - '*'
-  pull_request:
-    branches: [ master ]
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: set up JDK 1.8
@@ -26,3 +20,5 @@ jobs:
         BINTRAY_ORG: ${{ secrets.BINTRAY_ORG }}
         BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
       run: ./gradlew bintrayUpload
+    - name: Build documentation
+      run: ./gradlew :docs:orchidBuild
