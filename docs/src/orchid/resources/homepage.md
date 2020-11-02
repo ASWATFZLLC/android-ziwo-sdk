@@ -31,7 +31,7 @@ In order to setup the Ziwo SDK and the Verto protocol, follow the steps below.
 1. **Get an instance of ZiwoSDK**.
 
 ```kotlin
-ziwoSdk = Ziwo(applicationContext)  // or inject through hilt
+ziwoSdk = Ziwo(applicationContext, debugBool)
 ```
 
 2.A **Get an access token** (only needed if you dont have a valid token)
