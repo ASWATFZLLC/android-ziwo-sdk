@@ -1,22 +1,17 @@
 package com.ziwo.ziwosdk.socketApi
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.ziwo.ziwosdk.SessionIdNotSetException
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.AgentStatus
-import com.ziwo.ziwosdk.SessionIdNotSetException
 import com.ziwo.ziwosdk.verto.WebSocketStatus
 import io.socket.client.IO
 import io.socket.client.Socket
 import okhttp3.WebSocketListener
-import javax.inject.Inject
-import javax.inject.Singleton
 
-
-@Singleton
-class ZiwoWsApi  @Inject constructor(
+class ZiwoWsApi(
     var context: Context,
     var ziwoMain: Ziwo
 )  : WebSocketListener()  {
@@ -34,7 +29,7 @@ class ZiwoWsApi  @Inject constructor(
     var webSocketStatus : WebSocketStatus =  WebSocketStatus.Disconnected
         set(value) {
             socketHandler?.onApiSocketStatusChange(value)
-            Log.i(TAG, "status $webSocketStatus")
+            ziwoMain.logger(TAG, "status $webSocketStatus")
 
             if (
                 value == WebSocketStatus.Failed
@@ -71,13 +66,13 @@ class ZiwoWsApi  @Inject constructor(
                 }
                 ?.on(Socket.EVENT_ERROR) {
                     for (element in it) {
-                        Log.d(TAG, "EVENT_ERROR $element")
+                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
                     }
                     webSocketStatus = WebSocketStatus.Failed
                 }
                 ?.on(Socket.EVENT_RECONNECT_ERROR) {
                     for (element in it) {
-                        Log.d(TAG, "EVENT_ERROR $element")
+                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
                     }
                     webSocketStatus = WebSocketStatus.Failed
                 }
@@ -90,7 +85,7 @@ class ZiwoWsApi  @Inject constructor(
             socket?.connect()
         } catch (ex: Exception){
             webSocketStatus = WebSocketStatus.Failed
-            Log.d(TAG, "opensocketFailed ${ex.toString()}")
+            ziwoMain.logger(TAG, "opensocketFailed ${ex.toString()}")
         }
 
 
@@ -108,7 +103,7 @@ class ZiwoWsApi  @Inject constructor(
         // listeners
         socket?.on(WsApiRoutes.GetLiveStatus) {
             for (element in it) {
-                Log.d(TAG, "${WsApiRoutes.GetLiveStatus} ${element::class.qualifiedName} $element ")
+                ziwoMain.logger(TAG, "${WsApiRoutes.GetLiveStatus} ${element::class.qualifiedName} $element ")
                 val messageType = object : TypeToken<WsApiRes<GetLiveStatus>>(){}.type
                 val message = gson.fromJson(element.toString(), messageType ) as WsApiRes<GetLiveStatus>
                 message.content.status?.let { status -> socketHandler?.onAgentStatusChange(status) }
@@ -116,7 +111,7 @@ class ZiwoWsApi  @Inject constructor(
         }
         socket?.on(WsApiRoutes.GetProfile) {
             for (element in it) {
-                Log.d(TAG, "${WsApiRoutes.GetProfile} $element")
+                ziwoMain.logger(TAG, "${WsApiRoutes.GetProfile} $element")
             }
         }
 

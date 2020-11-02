@@ -1,6 +1,5 @@
 package com.ziwo.ziwosdk.utils.ziwoSdk.verto
 
-import android.util.Log
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
@@ -27,7 +26,7 @@ class VertoCommandsSender
             id = messageId
         )
         )
-        Log.d(VERTO_TAG, message)
+        vertoWs.ziwoMain.logger(VERTO_TAG, message)
         vertoWs.client?.send(message )
 
     }
@@ -48,7 +47,8 @@ class VertoCommandsSender
         )
 
         val rtcCollection = RTCPeerConnectionFactory(
-            vertoWs.context
+            vertoWs.context,
+            vertoWs.ziwoMain,
         ).outbound(
             this,
             call,

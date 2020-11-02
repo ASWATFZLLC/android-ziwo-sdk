@@ -1,6 +1,7 @@
 package com.ziwo.ziwosdk.httpApi
 
 import com.google.gson.Gson
+import com.ziwo.ziwosdk.Ziwo
 import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -9,15 +10,12 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
-import javax.inject.Inject
-import javax.inject.Singleton
 
 
-@Singleton
-class ZiwoApi @Inject constructor() {
+class ZiwoApi(private val ziwo: Ziwo) {
 
     // client basics
-    private val TAG = "ZiwoApi"
+    private val TAG = "[ZiwoApi]"
     private val client = OkHttpClient()
     private val gson = Gson()
 
@@ -29,17 +27,6 @@ class ZiwoApi @Inject constructor() {
     // Custom Exception
     open class ZiwoException(message:String): Exception(message)
     class UserIsAdminException(message:String): ZiwoException(message)
-
-//    /**
-//     * Helper function to handle request result and parsing
-//     */
-//    private fun  <T> processResponse(request: Request, type : T?) {
-//
-//        val response = client.newCall(request).execute()
-//        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-//
-//    }
-
 
     /**
      * useful for when restoring session manually offline
@@ -60,7 +47,6 @@ class ZiwoApi @Inject constructor() {
      */
     fun checkCallCenter(callCenter: String): Boolean {
 
-        // TODO: throw network issue or something
         return try {
             val request = Request.Builder()
                 .url("https://$callCenter-api.aswat.co/monitor/ping")
@@ -101,7 +87,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
 
         val bodyParsed = gson.fromJson(body, ZiwoApiLoginData::class.java)
         if( bodyParsed.content.type != "agent"){
@@ -135,7 +121,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
 
     }
 
@@ -152,22 +138,22 @@ class ZiwoApi @Inject constructor() {
             formBodyBuilder.add("countryCode", it)
         }
         params.currentPassword?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("currentPassword", it)
         }
         params.firstName?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("firstName", it)
         }
         params.languageCode?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("languageCode", it)
         }
         params.password?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("password", it)
         }
         params.photo?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("photo", it)
         }
         params.lastName?.let {
-            formBodyBuilder.add("countryCode", it)
+            formBodyBuilder.add("lastName", it)
         }
 
 
@@ -198,7 +184,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
 
     }
 
@@ -220,7 +206,7 @@ class ZiwoApi @Inject constructor() {
         val body = response.body!!.string()
         val bodyParsed = gson.fromJson(body, ListQueues::class.java)
 
-        println(body)
+        ziwo.logger(TAG, body)
 
         return bodyParsed.content
     }
@@ -244,7 +230,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
 
     }
 
@@ -296,7 +282,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
     }
 
     /**
@@ -317,7 +303,7 @@ class ZiwoApi @Inject constructor() {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         val body = response.body!!.string()
-        println(body)
+        ziwo.logger(TAG, body)
         val bodyParsed = gson.fromJson(body, ZiwoApiGetAgents::class.java)
 
         return bodyParsed.content

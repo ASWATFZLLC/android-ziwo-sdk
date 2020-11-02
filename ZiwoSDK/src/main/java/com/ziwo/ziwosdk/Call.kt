@@ -1,9 +1,9 @@
 package com.ziwo.ziwosdk
 
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
+import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoCommandsSender
 import com.ziwo.ziwosdk.verto.RTCPeerConnectionFactory
 import com.ziwo.ziwosdk.verto.VertoByeReason
-import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoCommandsSender
 import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
 import java.time.LocalDateTime
@@ -17,7 +17,7 @@ class Call
     val login: String,
     val direction: ZiwoApi.Enums.CallDirection,
     private val initialEvent: ZiwoEventType,
-    val initialPayload : Map<String, Any>? = null
+    private val initialPayload : Map<String, Any>? = null
     )
 {
 
@@ -67,7 +67,8 @@ class Call
 
         pushState(ZiwoEventType.Answering)
         RTCPeerConnectionFactory(
-            verto.vertoWs.context
+            verto.vertoWs.context,
+            verto.vertoWs.ziwoMain,
         ).inbound(
             initialPayload?.get("sdp") as String ?: "",
             this,

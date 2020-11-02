@@ -1,8 +1,8 @@
 package com.ziwo.ziwosdk.verto
 
 import android.content.Context
-import android.util.Log
 import com.ziwo.ziwosdk.Call
+import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoCommandsSender
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -10,18 +10,19 @@ import org.webrtc.*
 
 
 class RTCPeerConnectionFactory  constructor(
-    private val context: Context
+    private val context: Context,
+    private val ziwo: Ziwo
 ) {
 
     val TAG = "RTCPeerConnectionFactory"
-    val stunServer =listOf(
+    private val stunServer =listOf(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
     )
 
     private val peerConnectionFactory: PeerConnectionFactory by lazy {
         //Initialize PeerConnectionFactory globals.
         val initializationOptions = PeerConnectionFactory.InitializationOptions.builder(context)
-            .setEnableInternalTracer(true)
+            .setEnableInternalTracer(ziwo.debug)
             .createInitializationOptions()
 
         PeerConnectionFactory.initialize(initializationOptions)
@@ -41,16 +42,14 @@ class RTCPeerConnectionFactory  constructor(
         var pc: PeerConnection? = null
         // pc observer
         val pcObserver: PeerConnection.Observer =
-            object: MyPeerConnectionObserver("outbound_createPC",  call) {
+            object: MyPeerConnectionObserver("outbound_createPC",  call, ziwo) {
                 override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {
                     super.onIceGatheringChange(state)
                     // TODO: dont send if call is has already sent verto.bye , please add event closing
-                    println("oooo ${call.eventsArray.last().event}")
                     if (
                         state == PeerConnection.IceGatheringState.COMPLETE &&
                         call.eventsArray.last().event != Call.Companion.ZiwoEventType.Error
                     ) {
-                        println("cccccccccccccccccccccccccccccccccccccccccccccccccccccc")
                         vertoCommandsSender.send(
                             VertoEvent.Invite,
                             VertoInviteParams(
@@ -74,10 +73,10 @@ class RTCPeerConnectionFactory  constructor(
         )!!
 
         // create offer
-        val sdpObserver = object : MySdpObserver("OUTBOUND_sdpObserver", call){
+        val sdpObserver = object : MySdpObserver("OUTBOUND_sdpObserver", call, ziwo){
             override fun onCreateSuccess(sdp: SessionDescription?) {
                 super.onCreateSuccess(sdp)
-                pc.setLocalDescription( MySdpObserver("setLocalDescription", call) , sdp)
+                pc.setLocalDescription( MySdpObserver("setLocalDescription", call, ziwo) , sdp)
             }
         }
 
@@ -122,13 +121,13 @@ class RTCPeerConnectionFactory  constructor(
         localStream.addTrack(localAudioTrack)
 
         // setRemote
-        val setRemoteObserver = object : MySdpObserver("INBOUND_setRemote", call){
+        val setRemoteObserver = object : MySdpObserver("INBOUND_setRemote", call, ziwo){
             override fun onSetSuccess() {
                 super.onSetSuccess()
-                pc!!.createAnswer(  object : MySdpObserver("INBOUND_createAnswer", call){
+                pc!!.createAnswer(  object : MySdpObserver("INBOUND_createAnswer", call, ziwo){
                     override fun onCreateSuccess(sdp: SessionDescription?) {
                         super.onCreateSuccess(sdp)
-                        pc!!.setLocalDescription( object: MySdpObserver("setLocalDescription", call){
+                        pc!!.setLocalDescription( object: MySdpObserver("setLocalDescription", call, ziwo){
                             override fun onSetSuccess() {
                                 super.onSetSuccess()
 
@@ -141,7 +140,7 @@ class RTCPeerConnectionFactory  constructor(
 
         // pc observer
         val pcObserver: PeerConnection.Observer =
-            object : MyPeerConnectionObserver("inbound_createPeerConnection", call) {
+            object : MyPeerConnectionObserver("inbound_createPeerConnection", call, ziwo) {
                 override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {
                     super.onIceGatheringChange(state)
                     if (
@@ -192,13 +191,11 @@ class RTCPeerConnectionFactory  constructor(
 
         // pc observer
         val pcObserver  =
-            object : MyPeerConnectionObserver("Recovering_createPeerConnection", call) {
+            object : MyPeerConnectionObserver("Recovering_createPeerConnection", call, ziwo) {
 
                 override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {
                     super.onIceGatheringChange(state)
                     if (state == PeerConnection.IceGatheringState.COMPLETE){
-                        println(" im sending correctly now     0000000000000000")
-                        println( "pc.localDescription.description ${pc!!.localDescription.description.length}")
                         vertoCommandsSender.send(
                             VertoEvent.Attach,
                             VertoMessageAttachParamsSending(
@@ -225,7 +222,6 @@ class RTCPeerConnectionFactory  constructor(
                                 break
                             }
                         }
-                        println("------------------ $lastEvent")
 
                         // push or close last event
                         if (
@@ -249,16 +245,16 @@ class RTCPeerConnectionFactory  constructor(
 
 
         // setRemote
-        val setRemoteObserver = object : MySdpObserver("Recovering_setRemote", call){
+        val setRemoteObserver = object : MySdpObserver("Recovering_setRemote", call, ziwo){
             override fun onSetSuccess() {
                 super.onSetSuccess()
-                pc!!.createAnswer(  object : MySdpObserver("Recovering_createAnswer", call){
+                pc!!.createAnswer(  object : MySdpObserver("Recovering_createAnswer", call, ziwo){
                     override fun onCreateSuccess(sdp: SessionDescription?) {
                         super.onCreateSuccess(sdp)
-                        pc!!.createAnswer(  object : MySdpObserver("Recovering_createAnswer", call){
+                        pc!!.createAnswer(  object : MySdpObserver("Recovering_createAnswer", call, ziwo){
                             override fun onCreateSuccess(sdp: SessionDescription?) {
                                 super.onCreateSuccess(sdp)
-                                pc!!.setLocalDescription( object : MySdpObserver("Recovering_setLocalDescription", call){ }, sdp)
+                                pc!!.setLocalDescription( object : MySdpObserver("Recovering_setLocalDescription", call, ziwo){ }, sdp)
                             }
                         },audioConstraints)
                     }
@@ -300,22 +296,22 @@ class RTCPeerConnectionFactory  constructor(
 /**
  * helper observer1
  */
-open class MySdpObserver(private val TAG: String, private val call: Call) :SdpObserver{
+open class MySdpObserver(private val TAG: String, private val call: Call, private val ziwo: Ziwo?) :SdpObserver{
     override fun onSetFailure(p0: String?) {
-        Log.d(TAG, "onSetFailure $p0")
+        ziwo?.logger(TAG, "onSetFailure $p0")
         call.pushState(Call.Companion.ZiwoEventType.Error)
     }
 
     override fun onSetSuccess() {
-        Log.d(TAG, "onSetSuccess ")
+        ziwo?.logger(TAG, "onSetSuccess ")
     }
 
-    override fun onCreateSuccess(p0: SessionDescription?) {
-        Log.d(TAG, "onCreateSuccess $p0")
+    override fun onCreateSuccess(sdp: SessionDescription?) {
+        ziwo?.logger(TAG, "onCreateSuccess $sdp")
     }
 
     override fun onCreateFailure(p0: String?) {
-        Log.d(TAG, "onCreateFailure $p0")
+        ziwo?.logger(TAG, "onCreateFailure $p0")
         call.pushState(Call.Companion.ZiwoEventType.Error)
 //        call.destroy() // we close and follow verto recovery protocol
     }
@@ -326,24 +322,24 @@ open class MySdpObserver(private val TAG: String, private val call: Call) :SdpOb
 /**
  * helper observer2
  */
-open class MyPeerConnectionObserver(private val TAG: String, private val call: Call) : PeerConnection.Observer {
+open class MyPeerConnectionObserver(private val TAG: String, private val call: Call, private val ziwo: Ziwo?) : PeerConnection.Observer {
 
     public var localDescriptionHasBeenSet = false
 
     override fun onIceCandidate(iceCandidate: IceCandidate?) {
-        Log.d(TAG,"onIceCandidate $iceCandidate")
+        ziwo?.logger(TAG,"onIceCandidate $iceCandidate")
     }
 
     override fun onDataChannel(p0: DataChannel?) {
-        Log.d(TAG, "onDataChannel $p0")
+        ziwo?.logger(TAG, "onDataChannel $p0")
     }
 
     override fun onIceConnectionReceivingChange(p0: Boolean) {
-        Log.d(TAG, "onIceConnectionReceivingChange $p0")
+        ziwo?.logger(TAG, "onIceConnectionReceivingChange $p0")
     }
 
     override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-        Log.d(TAG, "onIceConnectionChange $p0")
+        ziwo?.logger(TAG, "onIceConnectionChange $p0")
 //        if ( p0 == PeerConnection.IceConnectionState.FAILED){
 //            call.pushState(Call.Companion.ZiwoEventType.Error)
 //            call.destroy() // we close and follow verto recovery protocol
@@ -351,31 +347,31 @@ open class MyPeerConnectionObserver(private val TAG: String, private val call: C
     }
 
     override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {
-        Log.d(TAG, "onIceGatheringChange $state")
+        ziwo?.logger(TAG, "onIceGatheringChange $state")
     }
 
     override fun onAddStream(p0: MediaStream?) {
-        Log.d(TAG, "onAddStream $p0")
+        ziwo?.logger(TAG, "onAddStream $p0")
     }
 
     override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-        Log.d(TAG, "onSignalingChange $p0")
+        ziwo?.logger(TAG, "onSignalingChange $p0")
     }
 
     override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
-        Log.d(TAG, "onIceCandidatesRemoved $p0")
+        ziwo?.logger(TAG, "onIceCandidatesRemoved $p0")
     }
 
     override fun onRemoveStream(p0: MediaStream?) {
-        Log.d(TAG, "onRemoveStream $p0")
+        ziwo?.logger(TAG, "onRemoveStream $p0")
     }
 
     override fun onRenegotiationNeeded() {
-        Log.d(TAG, "onRenegotiationNeeded $")
+        ziwo?.logger(TAG, "onRenegotiationNeeded $")
     }
 
     override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {
-        Log.d(TAG, "onAddTrack $p0 $p1")
+        ziwo?.logger(TAG, "onAddTrack $p0 $p1")
     }
 
 }

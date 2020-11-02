@@ -1,7 +1,6 @@
 package com.ziwo.ziwosdk.utils.ziwoSdk.verto
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.ziwo.ziwosdk.Call
@@ -18,13 +17,10 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.webrtc.SessionDescription
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.concurrent.schedule
 
 
-    @Singleton
-class VertoWs  @Inject constructor(
+class VertoWs(
     var context: Context,
     var ziwoMain: Ziwo
 )  : WebSocketListener()  {
@@ -66,18 +62,17 @@ class VertoWs  @Inject constructor(
         this.userPassword = userPassword;
         this.sessionId =  sessionId
 
-        Log.i(TAG, "login")
-        Log.i(TAG, "login uuid $sessionId")
+        ziwoMain.logger(TAG, "login")
+        ziwoMain.logger(TAG, "login uuid $sessionId")
 
         //  send logout command
         try {
             // ziwoMain.ziwoApiClient.getProfile()
             ziwoMain.ziwoApiClient.autoLogout()
-            // println("${ziwoMain.ziwoApiClient.autoLogout() }   success")
         } catch (ex: java.lang.Exception){
             myOnFailure()
-            println("ziwo api autologin failed $ex")
-            println(ex)
+            ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
+            ziwoMain.logger(TAG, ex)
             return
         }
 
@@ -87,7 +82,7 @@ class VertoWs  @Inject constructor(
 
         client = OkHttpClient().newWebSocket(request, listener )
 
-        Log.i(TAG, "login 5alas")
+        ziwoMain.logger(TAG, "login 5alas")
 
     }
 
@@ -126,7 +121,7 @@ class VertoWs  @Inject constructor(
 
         // parse event type to know which handler to call
         val messageEvent = gson.fromJson(text, VertoMessage<Nothing>()::class.java )
-        Log.i( TAG, "\n $text")
+        ziwoMain.logger( TAG, "\n $text")
 
         /** check which handler */
 
@@ -174,7 +169,7 @@ class VertoWs  @Inject constructor(
 
         Timer().schedule(5000) {
             if (webSocketStatus == WebSocketStatus.Failed ) {
-                println("onFailureCounter $onFailCounter")
+                ziwoMain.logger(TAG, "onFailureCounter $onFailCounter")
 
                 webSocketStatus = WebSocketStatus.Retrying
                 login(callcenter, userName, userPassword, sessionId)
@@ -198,14 +193,14 @@ class VertoWs  @Inject constructor(
                     ziwoMain.ziwoApiClient.autoLogin()
                 } catch (ex: java.lang.Exception){
                     myOnFailure()
-                    println("ziwo api autologin failed $ex")
-                    println(ex)
+                    ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
+                    ziwoMain.logger(TAG, ex)
                     return
                 }
 
                 // update socket status
                 webSocketStatus = WebSocketStatus.Ready
-                val message = gson.fromJson(rawSocketMessage, VertoMessage<VertoMessageLoginParams>()::class.java )
+                // val message = gson.fromJson(rawSocketMessage, VertoMessage<VertoMessageLoginParams>()::class.java )
 
                 // run clean disconnected jobs
                 disconnectedJob =  GlobalScope.launch {
@@ -253,15 +248,15 @@ class VertoWs  @Inject constructor(
                 try {
                         callsList[message.params?.callID]?.pushState(Call.Companion.ZiwoEventType.Early)
                         callsList[message.params?.callID]?.rtcPeerConnection?.setRemoteDescription(
-                            MySdpObserver("Verto.Media_setRemoteSDp", callsList[message.params?.callID]!!),
+                            MySdpObserver("Verto.Media_setRemoteSDp", callsList[message.params?.callID]!!, ziwoMain),
                             SessionDescription(
                                 SessionDescription.Type.ANSWER,
                                 message.params?.sdp
                             )
                         )
-                        Log.i(TAG, "added remote description")
+                    ziwoMain.logger(TAG, "added remote description")
                 } catch (ex: Exception) {
-                    Log.i(TAG, "$ex")
+                    ziwoMain.logger(TAG, "$ex")
                 }
             }
 
@@ -294,10 +289,11 @@ class VertoWs  @Inject constructor(
                             call.pushState(Call.Companion.ZiwoEventType.Recovering)
                             val newRtcCollection =
                                 RTCPeerConnectionFactory(
-                                    context
+                                    context,
+                                    ziwoMain,
                                 ).recover(
                                     webSocketCommandsSender,
-                                    message.params!!.sdp,
+                                    message.params.sdp,
                                     call
                                 )
 
@@ -326,11 +322,8 @@ class VertoWs  @Inject constructor(
             }
 
             VertoEvent.Answer ->{
-                val messageType = object : TypeToken<VertoMessage<VertoMessageAnswerParams>>(){}.type
-                val message = gson.fromJson(rawSocketMessage, messageType ) as VertoMessage<VertoMessageAnswerParams>
-
-                // TODO: incoming answer and outgoing answer are different things
-                // callsList[message.params?.callID]?.pushState(Call.Companion.ZiwoEventType.Answering)
+                // val messageType = object : TypeToken<VertoMessage<VertoMessageAnswerParams>>(){}.type
+                // val message = gson.fromJson(rawSocketMessage, messageType ) as VertoMessage<VertoMessageAnswerParams>
             }
 
         }
