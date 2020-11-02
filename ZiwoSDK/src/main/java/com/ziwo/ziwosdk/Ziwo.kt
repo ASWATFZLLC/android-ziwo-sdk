@@ -6,7 +6,7 @@ import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import com.ziwo.ziwosdk.socketApi.ZiwoWsApi
 import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoWs
 
-class Ziwo(appContext: Context, public val debug: Boolean)  {
+class Ziwo(appContext: Context, public val debug: Boolean = false)  {
 
     // class logic
     private val TAG = "ZiwoSDK"
