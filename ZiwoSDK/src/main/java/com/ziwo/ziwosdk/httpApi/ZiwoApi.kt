@@ -76,6 +76,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
 
         val request = Request.Builder()
             .url(baseUrl + "/auth/device")
+            .addHeader("access_token", this.accessToken)
             .put(formBody)
             .build()
 
