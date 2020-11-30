@@ -64,6 +64,30 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     /**
+     * endpoint `/auth/device`
+     * Register the device's firebase token with ziwo
+     */
+    fun registerToken(deviceToken: String) {
+
+        val formBody: RequestBody =
+            FormBody.Builder()
+                .add("deviceToken", deviceToken)
+                .build()
+
+        val request = Request.Builder()
+            .url(baseUrl + "auth/device")
+            .put(formBody)
+            .build()
+
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+        val body = response.body!!.string()
+        ziwo.logger(TAG, body)
+
+    }
+
+    /**
      * endpoint `/auth/login`
      * Adds a [authToken] to this instance.
      */
