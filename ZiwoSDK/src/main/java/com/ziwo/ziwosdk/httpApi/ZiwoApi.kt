@@ -75,7 +75,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
                 .build()
 
         val request = Request.Builder()
-            .url(baseUrl + "auth/device")
+            .url(baseUrl + "/auth/device")
             .put(formBody)
             .build()
 
