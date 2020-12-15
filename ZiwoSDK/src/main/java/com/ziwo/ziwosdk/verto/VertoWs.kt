@@ -43,6 +43,7 @@ class VertoWs(
             field = value
         }
     var callsList = sortedMapOf<String, Call>()
+    var manualMessagesList = mutableListOf<ManualVertoMessage>()
 
     // rxJava
     var vertoHandler: VertoHandlerInterface? = null
@@ -65,24 +66,28 @@ class VertoWs(
         ziwoMain.logger(TAG, "login")
         ziwoMain.logger(TAG, "login uuid $sessionId")
 
-        //  send logout command
-        try {
-            // ziwoMain.ziwoApiClient.getProfile()
-            ziwoMain.ziwoApiClient.autoLogout()
-        } catch (ex: java.lang.Exception){
-            myOnFailure()
-            ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
-            ziwoMain.logger(TAG, ex)
-            return
-        }
-
-
-        val request = okhttp3.Request.Builder().url("wss://$callcenter.aswat.co:8082").build()
+        val request = okhttp3.Request.Builder().url("wss://$callcenter.aswat.co:8084").build()
         val listener = this;
 
         client = OkHttpClient().newWebSocket(request, listener )
 
         ziwoMain.logger(TAG, "login 5alas")
+
+    }
+
+    /**
+     * pass verto socket messages manually, useful for notifications integrations such as firebase
+     * the messages will be passed into [onMessage] when socket is set to ready
+     */
+    fun manualInsertMessage(message: ManualVertoMessage){
+
+        if (webSocketStatus == WebSocketStatus.Ready){
+            client?.let{
+                onMessage( it , message.content)
+            }
+        } else {
+            manualMessagesList.add(message)
+        }
 
     }
 
@@ -214,6 +219,14 @@ class VertoWs(
                     }
 
                 }
+
+                // process manual messages
+                manualMessagesList.forEach { manualVertoMessage ->
+                    client?.let{
+                        onMessage( it , manualVertoMessage.content)
+                    }
+                }
+                manualMessagesList.clear()
 
             }
 

@@ -9,7 +9,7 @@ interface VertoHandlerInterface {
 
     fun onVertoSocketStatusChange (status: WebSocketStatus)
     fun callStarted(call: Call)
-    fun callEnded()
+    fun callEnded(call: Call)
     fun callStatusChanged(ziwoCallChanged: Call.Companion.ZiwoCallChanged)
 
 }
@@ -50,6 +50,10 @@ enum class VertoEvent {
     @SerializedName("verto.pickup")
     Pickup,
 }
+
+data class ManualVertoMessage (
+    val content: String,
+)
 
 enum class VertoByeReason() {
     NORMAL_CLEARING,

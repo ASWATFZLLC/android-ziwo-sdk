@@ -102,7 +102,7 @@ class Call
         rtcClose()
         verto.vertoWs.callsList.remove(callId)
         pushState(ZiwoEventType.Destroy)
-        verto.vertoWs.vertoHandler?.callEnded()
+        verto.vertoWs.vertoHandler?.callEnded(this)
     }
 
     fun rtcClose(){

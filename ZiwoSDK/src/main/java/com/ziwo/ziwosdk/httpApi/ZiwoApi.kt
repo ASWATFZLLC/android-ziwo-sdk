@@ -1,5 +1,6 @@
 package com.ziwo.ziwosdk.httpApi
 
+import android.util.Log
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Ziwo
 import okhttp3.FormBody
@@ -81,10 +82,11 @@ class ZiwoApi(private val ziwo: Ziwo) {
             .build()
 
         val response = client.newCall(request).execute()
+        val body = response.body?.string() ?: ""
+        ziwo.logger(TAG, body)
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-        val body = response.body!!.string()
-        ziwo.logger(TAG, body)
+
 
     }
 
@@ -92,7 +94,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
      * endpoint `/auth/login`
      * Adds a [authToken] to this instance.
      */
-    fun login(callCenter: String, userName: String, userPassword: String): ZiwoApiLoginContentData {
+    fun login(callCenter: String, userName: String, userPassword: String, vertoSessionId: String): ZiwoApiLoginContentData {
 
         baseUrl  = "https://$callCenter-api.aswat.co"
 
@@ -100,7 +102,9 @@ class ZiwoApi(private val ziwo: Ziwo) {
             FormBody.Builder()
                 .add("username", userName)
                 .add("password", userPassword)
+                .add("vertoSessionId", vertoSessionId)
                 .add("remember", "true")
+                .add("deviceType", "Android")
                 .build()
 
         val request = Request.Builder()
@@ -126,7 +130,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     /**
-     * endpoint `/agents/autologin`
+     * endpoint `/agents/status`
      * enables agent to make and receive calls
      */
     fun updateAgentStatus(status: AgentStatus) {
@@ -143,9 +147,14 @@ class ZiwoApi(private val ziwo: Ziwo) {
             .build()
 
         val response = client.newCall(request).execute()
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
         val body = response.body!!.string()
+        if (!response.isSuccessful) {
+            Log.e(TAG, body)
+            throw IOException("Unexpected code $response")
+
+        }
+
+
         ziwo.logger(TAG, body)
 
     }
@@ -194,7 +203,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     /**
-     * endpoint `/agents/autologin`
+     * endpoint `/fs/webrtc/config`
      * enables agent to make and receive calls
      */
     fun getProfile() {
@@ -260,6 +269,29 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     /**
+     * endpoint `/auth/logout/`
+     *  destroy session
+     */
+    fun logout(): String {
+
+        val request = Request.Builder()
+            .url(baseUrl + "/auth/logout")
+            .addHeader("access_token", this.accessToken)
+            .post(FormBody.Builder().build())
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        val body = response.body!!.string()
+        Log.d(TAG, body)
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+
+        return body
+
+    }
+
+    /**
      * endpoint `/agents/logout/`
      *  logout other open sessions
      */
@@ -279,9 +311,8 @@ class ZiwoApi(private val ziwo: Ziwo) {
         val response = client.newCall(request).execute()
 
         val body = response.body!!.string()
-        if ( response.code != 412){ // ignore if already logged off
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        }
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
 
        return body
 

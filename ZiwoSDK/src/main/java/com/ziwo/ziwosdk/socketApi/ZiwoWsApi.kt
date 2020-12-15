@@ -59,7 +59,7 @@ class ZiwoWsApi(
                     onReconnect()
                 }
                 ?.on(Socket.EVENT_RECONNECT) {
-                    onReconnect()
+                    onConnect()
                 }
                 ?.on(Socket.EVENT_CONNECT) {
                     onConnect()
@@ -118,7 +118,7 @@ class ZiwoWsApi(
         // TODO custom subscribe to different events
         // subscribing
         socket?.emit("subscribe", WsApiRoutes.GetLiveStatus)
-        //socket?.emit(WsApiRoutes.GetLiveStatus, {})
+        socket?.emit(WsApiRoutes.GetLiveStatus, {})
 
     }
 
