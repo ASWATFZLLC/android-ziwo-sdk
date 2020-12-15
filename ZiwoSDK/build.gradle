@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
+
 apply plugin: 'kotlin-kapt'
 // apply plugin: 'dagger.hilt.android.plugin'
 apply from: "$project.rootDir/tools/script-git-version.gradle"
@@ -75,7 +76,7 @@ dependencies {
 
 // Avoid Kotlin docs error
 tasks.withType(Javadoc).all {
-    enabled = true
+    enabled = false
 }
 
 apply from: 'publish.gradle'
