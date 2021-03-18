@@ -355,7 +355,7 @@ class VertoWs(
                 lastEvent !== Call.Companion.ZiwoEventType.Disconnected
                 && lastEvent !== Call.Companion.ZiwoEventType.Destroy
             ) {
-                callObject.rtcClose()
+//                callObject.rtcClose()
             }
         }
     }
