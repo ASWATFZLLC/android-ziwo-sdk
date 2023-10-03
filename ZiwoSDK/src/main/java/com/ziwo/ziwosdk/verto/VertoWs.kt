@@ -66,7 +66,7 @@ class VertoWs(
         ziwoMain.logger(TAG, "login")
         ziwoMain.logger(TAG, "login uuid $sessionId")
 
-        val request = okhttp3.Request.Builder().url("wss://$callcenter.aswat.co:8084").build()
+        val request = okhttp3.Request.Builder().url("wss://$callcenter-api.aswat.co:8082").build()
         val listener = this;
 
         client = OkHttpClient().newWebSocket(request, listener )
@@ -339,6 +339,7 @@ class VertoWs(
                 // val message = gson.fromJson(rawSocketMessage, messageType ) as VertoMessage<VertoMessageAnswerParams>
             }
 
+            else -> {}
         }
     }
 

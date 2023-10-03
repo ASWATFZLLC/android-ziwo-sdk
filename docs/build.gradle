@@ -1,4 +1,3 @@
-
 // 1. Apply Orchid plugin
 plugins {
     id "com.eden.orchidPlugin" version "0.21.0"
@@ -6,14 +5,14 @@ plugins {
 
 // 2. Include Orchid dependencies
 dependencies {
-    orchidRuntime "io.github.javaeden.orchid:OrchidDocs:0.21.0"
-    orchidRuntime "io.github.javaeden.orchid:OrchidKotlindoc:0.21.0"
-    orchidRuntime "io.github.javaeden.orchid:OrchidPluginDocs:0.21.0"
+    implementation "io.github.javaeden.orchid:OrchidDocs:0.21.0"
+    implementation "io.github.javaeden.orchid:OrchidKotlindoc:0.21.0"
+    implementation "io.github.javaeden.orchid:OrchidPluginDocs:0.21.0"
 }
 
-// 3. Get dependencies from JCenter and Kotlinx Bintray repo
+// 3. Get dependencies from Maven Central and Kotlinx Bintray repo
 repositories {
-    jcenter()
+    mavenCentral()  // Prefer Maven Central as JCenter has been sunset
     maven { url = "https://kotlin.bintray.com/kotlinx/" }
 }
 
@@ -26,4 +25,3 @@ orchid {
     baseUrl = "https://sdk.ziwo.io/android"
     //srcDir  = "src/orchid/resources"
 }
-
