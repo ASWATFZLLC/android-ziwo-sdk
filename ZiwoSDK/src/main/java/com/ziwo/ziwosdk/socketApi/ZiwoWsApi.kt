@@ -53,24 +53,24 @@ class ZiwoWsApi(
         opts.transports = arrayOf("websocket")
 
         try {
-            socket = IO.socket("https://$callcenter-api.aswat.co", opts);
+            socket = IO.socket("wss://$callcenter-api.aswat.co", opts);
             socket
-                ?.on(Socket.EVENT_CONNECTING) {
+                ?.on(Socket.EVENT_DISCONNECT) {
                     onReconnect()
                 }
-                ?.on(Socket.EVENT_RECONNECT) {
+                ?.on(Socket.EVENT_CONNECT) {
                     onConnect()
                 }
                 ?.on(Socket.EVENT_CONNECT) {
                     onConnect()
                 }
-                ?.on(Socket.EVENT_ERROR) {
+                ?.on(Socket.EVENT_CONNECT_ERROR) {
                     for (element in it) {
                         ziwoMain.logger(TAG, "EVENT_ERROR $element")
                     }
                     webSocketStatus = WebSocketStatus.Failed
                 }
-                ?.on(Socket.EVENT_RECONNECT_ERROR) {
+                ?.on(Socket.EVENT_CONNECT_ERROR) {
                     for (element in it) {
                         ziwoMain.logger(TAG, "EVENT_ERROR $element")
                     }
@@ -79,7 +79,7 @@ class ZiwoWsApi(
                 ?.on(Socket.EVENT_DISCONNECT) {
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
-                ?.on(Socket.EVENT_RECONNECT_FAILED) {
+                ?.on(Socket.EVENT_CONNECT_ERROR) {
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
             socket?.connect()
