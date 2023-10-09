@@ -81,6 +81,11 @@ data class ZiwoApiGetAgentsContent(
     val liveInfo: ZiwoApiGetAgentsLiveInfo?,
     val photo: String?
 )  : Parcelable
+data class ZiwoApiGetAgentsResponse(
+    val content: List<ZiwoApiGetAgentsContent>?
+)data class ListQueuesResponse(
+    val content: List<ListQueuesContent>?
+)
 
 @Parcelize
 data class ZiwoApiGetAgentsLiveInfo(
@@ -109,6 +114,16 @@ data class ZiwoApiCountriesContent(
     val sample: ZiwoApiCountriesContentSample,
     val tld: String
 )  : Parcelable
+data class ZiwoApiCountriesResponse(
+    val content: List<ZiwoApiCountriesContent>
+)
+data class RecordingUrlResponse(
+    val content: RecordingUrlContent
+)
+
+data class RecordingUrlContent(
+    val endpoint: String
+)
 
 @Parcelize
 data class ZiwoApiCountriesContentSample(

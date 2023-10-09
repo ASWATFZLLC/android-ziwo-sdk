@@ -195,7 +195,9 @@ class VertoWs(
 
                 //  send login command
                 try {
-                    ziwoMain.ziwoApiClient.autoLogin()
+                    GlobalScope.launch {
+                        ziwoMain.ziwoApiClient.autoLogin()
+                    }
                 } catch (ex: java.lang.Exception){
                     myOnFailure()
                     ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
