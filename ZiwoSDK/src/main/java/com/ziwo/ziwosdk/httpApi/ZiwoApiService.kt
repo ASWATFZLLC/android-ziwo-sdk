@@ -1,5 +1,6 @@
 package com.ziwo.ziwosdk.httpApi
 
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -38,13 +39,13 @@ interface ZiwoApiService {
     suspend fun getListQueues(): Response<ListQueuesResponse>
 
     @PUT("agents/autologin")
-    suspend fun autoLogin(): Response<Void>
+    suspend fun autoLogin(@Body requestBody: RequestBody): Response<Void>
 
     @POST("auth/logout")
     suspend fun logout(): Response<String>
 
     @PUT("agents/logout")
-    suspend fun autoLogout(): Response<String>
+    suspend fun autoLogout(@Body requestBody: RequestBody): Response<String>
 
     @POST("users/password/reset")
     @FormUrlEncoded

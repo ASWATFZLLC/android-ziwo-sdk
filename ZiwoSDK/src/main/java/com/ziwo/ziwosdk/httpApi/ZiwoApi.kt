@@ -1,12 +1,14 @@
 package com.ziwo.ziwosdk.httpApi
 
-import android.util.Log
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Ziwo
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.IOException
 
 class ZiwoApi(private val ziwo: Ziwo) {
@@ -42,6 +44,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         retrofit = Retrofit.Builder()
             .client(client)
             .baseUrl(this.baseUrl)
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         service = retrofit?.create(ZiwoApiService::class.java)!!
@@ -146,7 +149,11 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
     suspend fun autoLogin() {
         try {
-            val response = service.autoLogin()
+            val requestBody = RequestBody.create(
+                "application/json".toMediaType(),
+                "{}"
+            )
+            val response = service.autoLogin(requestBody)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
             // handle exception or rethrow it
@@ -165,7 +172,12 @@ class ZiwoApi(private val ziwo: Ziwo) {
 
     suspend fun autoLogout(): String? {
         return try {
-            val response = service.autoLogout()
+            val requestBody = RequestBody.create(
+                "application/json".toMediaType(),
+                "{}"
+            )
+
+            val response = service.autoLogout(requestBody)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
         } catch (ex: IOException) {
