@@ -25,22 +25,35 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     // Set up OkHttpClient with interceptor
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .addInterceptor(HeaderInterceptor(accessToken))
-        .build()
-
+    private var client : OkHttpClient? =null
     // Set up Retrofit with OkHttpClient and GsonConverterFactory
-    private var retrofit: Retrofit = Retrofit.Builder()
-        .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
+    private  var retrofit: Retrofit? =null
 
     // Instantiate service
-    private var service: ZiwoApiService
+    private lateinit var service: ZiwoApiService
 
-    init {
-        service = retrofit.create(ZiwoApiService::class.java)
+    private fun buildClient() {
+        val headerInterceptor = HeaderInterceptor(this.accessToken)
+        client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(headerInterceptor)
+            .build()
+        // Optionally, also rebuild your Retrofit instance to use the new OkHttpClient
+        retrofit = Retrofit.Builder()
+            .client(client)
+            .baseUrl(this.baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        service = retrofit?.create(ZiwoApiService::class.java)!!
+    }
+    private fun updateBaseUrl(callCenter: String){
+        this.baseUrl = "https://$callCenter-api.aswat.co"
+        buildClient()
+
+    }
+    private fun updateAccessToken(accessToken: String){
+        this.accessToken = accessToken
+        buildClient()
     }
 
     // Custom Exception
@@ -50,18 +63,14 @@ class ZiwoApi(private val ziwo: Ziwo) {
     /**
      * useful for when restoring session manually offline
      */
-    fun setCredentials(callCenter: String? = null, accessToken: String? = null) {
-        if (callCenter != null) {
-            baseUrl = "https://$callCenter-api.aswat.co"
-            retrofit = retrofit.newBuilder().baseUrl(baseUrl).build() // Update base URL
-            service = retrofit.create(ZiwoApiService::class.java) // Update service
-        }
+    fun setCredentials( accessToken: String? = null) {
         if (accessToken != null) {
-            this.accessToken = accessToken
+            updateAccessToken(accessToken)
         }
     }
 
     suspend fun checkCallCenter(callCenter: String): Boolean {
+        updateBaseUrl(callCenter)
         return try {
             val response = service.checkCallCenter(callCenter)
             response.isSuccessful
@@ -83,6 +92,12 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.login(callCenter, userName, userPassword, vertoSessionId)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+            response.body()?.content?.access_token?.let {
+                updateAccessToken(
+                    it
+                )
+            }
             return response.body()?.content
         } catch (ex: IOException) {
             // handle exception or rethrow it
