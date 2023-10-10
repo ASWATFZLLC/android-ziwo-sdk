@@ -89,10 +89,14 @@ class ZiwoApi(private val ziwo: Ziwo) {
     }
 
     suspend fun login(callCenter: String, userName: String, userPassword: String, vertoSessionId: String): ZiwoApiLoginContentData? {
+        if (retrofit==null||service==null)
+            updateBaseUrl(callCenter)
         try {
             val response = service.login(callCenter, userName, userPassword, vertoSessionId)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
+            if( response.body()?.content?.type != "agent"){
+                throw UserIsAdminException("attempt login with non agent type user")
+            }
             response.body()?.content?.access_token?.let {
                 updateAccessToken(
                     it
