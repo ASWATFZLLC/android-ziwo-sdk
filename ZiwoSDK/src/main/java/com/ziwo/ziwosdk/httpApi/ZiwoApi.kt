@@ -106,9 +106,9 @@ class ZiwoApi(private val ziwo: Ziwo) {
                 )
             }
             return response.body()?.content
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             // handle exception or rethrow it
-            return null
+            throw ex
         }
     }
     suspend fun updateAgentStatus(status: AgentStatus) {
@@ -116,7 +116,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.updateAgentStatus(status.code)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -125,7 +125,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.updateAgent(params)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -134,7 +134,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getProfile()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -144,7 +144,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
     suspend fun autoLogin() {
@@ -156,7 +156,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.autoLogin(requestBody)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -166,7 +166,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -181,7 +181,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
     suspend fun resetPassword(userName: String) {
@@ -189,7 +189,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.resetPassword(userName)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -199,7 +199,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -209,7 +209,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -253,7 +253,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -263,7 +263,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             "${response.body()?.content?.endpoint}$callId"
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
@@ -273,7 +273,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             "$baseUrl${response.body()?.content?.endpoint}"
         } catch (ex: IOException) {
-            null // handle exception or rethrow it
+            throw ex
         }
     }
 
