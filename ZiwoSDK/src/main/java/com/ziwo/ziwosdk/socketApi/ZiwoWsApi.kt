@@ -8,6 +8,7 @@ import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.AgentStatus
 import com.ziwo.ziwosdk.verto.WebSocketStatus
 import io.socket.client.IO
+import io.socket.client.Manager
 import io.socket.client.Socket
 import okhttp3.WebSocketListener
 
@@ -47,6 +48,7 @@ class ZiwoWsApi(
         this.accessToken =  accessToken
 
         val opts: IO.Options = IO.Options()
+        opts.timeout = 30000  // set a timeout of 30 seconds
         opts.query = "access_token=$accessToken"
         opts.path = "/socket"
         opts.reconnection = true
@@ -55,39 +57,75 @@ class ZiwoWsApi(
         try {
             socket = IO.socket("wss://$callcenter-api.aswat.co", opts);
             socket
-                ?.on(Socket.EVENT_DISCONNECT) {
+                ?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
                     onReconnect()
+                    ziwoMain.logger(TAG, "Manager EVENT_RECONNECT_ATTEMPT")
+
                 }
-                ?.on(Socket.EVENT_CONNECT) {
+                ?.on(Manager.EVENT_RECONNECT) {
                     onConnect()
+                    ziwoMain.logger(TAG, " Manager EVENT_RECONNECT")
+
                 }
-                ?.on(Socket.EVENT_CONNECT) {
-                    onConnect()
-                }
-                ?.on(Socket.EVENT_CONNECT_ERROR) {
+                ?.on(Manager.EVENT_RECONNECT_ERROR) {
                     for (element in it) {
                         ziwoMain.logger(TAG, "EVENT_ERROR $element")
                     }
                     webSocketStatus = WebSocketStatus.Failed
                 }
-                ?.on(Socket.EVENT_CONNECT_ERROR) {
-                    for (element in it) {
-                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
-                    }
-                    webSocketStatus = WebSocketStatus.Failed
-                }
-                ?.on(Socket.EVENT_DISCONNECT) {
+                ?.on(Manager.EVENT_RECONNECT_FAILED) {
+                    ziwoMain.logger(TAG, " Socket.EVENT_RECONNECT_FAILED")
+
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
+
+                ?.on(Socket.EVENT_CONNECT) {
+                    ziwoMain.logger(TAG, " Socket.EVENT_CONNECT")
+
+                    onConnect()
+                }
                 ?.on(Socket.EVENT_CONNECT_ERROR) {
+                    for (element in it) {
+                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
+                    }
+                    webSocketStatus = WebSocketStatus.Failed
+                }
+                ?.on(Socket.EVENT_DISCONNECT) {
+                    ziwoMain.logger(TAG, " Socket.EVENT_DISCONNECT")
+                    webSocketStatus = WebSocketStatus.Disconnected
+                }
+
+            socket?.io()?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
+                onReconnect()
+                ziwoMain.logger(TAG, "Manager EVENT_RECONNECT_ATTEMPT")
+
+            }
+                ?.on(Manager.EVENT_RECONNECT) {
+                    onConnect()
+                    ziwoMain.logger(TAG, " Manager EVENT_RECONNECT")
+
+                }
+                ?.on(Manager.EVENT_RECONNECT_ERROR) {
+                    for (element in it) {
+                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
+                    }
+                    webSocketStatus = WebSocketStatus.Failed
+                }
+                ?.on(Manager.EVENT_RECONNECT_FAILED) {
+                    ziwoMain.logger(TAG, " Socket.EVENT_RECONNECT_FAILED")
+
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
             socket?.connect()
-        } catch (ex: Exception){
+        }
+            catch ( e:java.net.SocketTimeoutException) {
+                ziwoMain.logger(TAG, "Socket Timeout: ${e.message}");
+                // handle the exception
+            }
+         catch (ex: Exception){
             webSocketStatus = WebSocketStatus.Failed
             ziwoMain.logger(TAG, "opensocketFailed ${ex.toString()}")
         }
-
 
     }
 
