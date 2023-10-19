@@ -10,6 +10,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class ZiwoApi(private val ziwo: Ziwo) {
 
@@ -37,6 +38,8 @@ class ZiwoApi(private val ziwo: Ziwo) {
     private fun buildClient() {
         val headerInterceptor = HeaderInterceptor(this.accessToken)
         client = OkHttpClient.Builder()
+            .readTimeout(30, TimeUnit.SECONDS)  // Increase read timeout
+            .connectTimeout(30, TimeUnit.SECONDS)  // Increase connection timeout
             .addInterceptor(loggingInterceptor)
             .addInterceptor(headerInterceptor)
             .build()
@@ -87,7 +90,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.registerToken(deviceToken)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
         } catch (ex: IOException) {
-            // handle exception or rethrow it
+            throw ex
         }
     }
 
