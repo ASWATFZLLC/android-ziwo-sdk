@@ -41,11 +41,13 @@ class ZiwoWsApi(
             field = value
         }
 
-    /**  Opens the socket and set login paremeters [callcenter] [accessToken] */
-    fun login(callcenter: String, accessToken: String) {
-
+    /** set login paremeters [callcenter] [accessToken] */
+    fun setLoginCredentials(callcenter: String, accessToken: String){
         this.callcenter = callcenter
         this.accessToken =  accessToken
+    }
+    /**  Opens the socket */
+    fun login() {
 
         val opts: IO.Options = IO.Options()
         opts.timeout = 30000  // set a timeout of 30 seconds
@@ -168,7 +170,7 @@ class ZiwoWsApi(
         if ( this.callcenter.isNullOrEmpty() || this.accessToken.isNullOrEmpty()){
             throw SessionIdNotSetException("login not initialized")
         }
-        login(this.callcenter!!, this.accessToken!!)
+        login()
     }
 
     public fun disconnect(){

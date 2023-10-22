@@ -54,15 +54,17 @@ class VertoWs(
     fun getLogin(): String {
         return "$userName@$callcenter.aswat.co"
     }
-
-    /**  Opens the socket and set login paremeters [userName] [userPassword] */
-    fun login(callcenter: String, userName: String, userPassword: String, sessionId: String) {
+    /**   set login paremeters [userName] [userPassword] */
+    fun setLoginCredentials(callcenter: String, userName: String, userPassword: String, sessionId: String) {
 
         this.callcenter = callcenter
         this.userName = userName;
         this.userPassword = userPassword;
-        this.sessionId =  sessionId
+        this.sessionId = sessionId
+    }
 
+    /**  Opens the socket and set login paremeters [userName] [userPassword] */
+    fun login() {
         ziwoMain.logger(TAG, "login")
         ziwoMain.logger(TAG, "login uuid $sessionId")
 
@@ -177,7 +179,7 @@ class VertoWs(
                 ziwoMain.logger(TAG, "onFailureCounter $onFailCounter")
 
                 webSocketStatus = WebSocketStatus.Retrying
-                login(callcenter, userName, userPassword, sessionId)
+                login()
             }
         }
     }
@@ -398,7 +400,7 @@ class VertoWs(
     fun reconnect(){
         // TODO: Check vars first
         logout()
-        login(callcenter, userName, userPassword, sessionId)
+        login()
     }
 
 }
