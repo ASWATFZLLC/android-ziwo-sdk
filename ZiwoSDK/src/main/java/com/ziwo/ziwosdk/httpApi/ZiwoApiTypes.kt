@@ -16,6 +16,11 @@ enum class AgentStatus(val code: Int){
     @SerializedName("Outgoing") Outgoing(4),
 }
 
+enum class AgentStatusSource(val value: String) {
+    @SerializedName("agent") AGENT("agent"),
+    @SerializedName("fs-disconnect") FS_DISCONNECT("fs-disconnect");
+}
+
 
 
 

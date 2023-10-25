@@ -1,11 +1,12 @@
 package com.ziwo.ziwosdk.socketApi
 
 import com.ziwo.ziwosdk.httpApi.AgentStatus
+import com.ziwo.ziwosdk.httpApi.AgentStatusSource
 import com.ziwo.ziwosdk.verto.WebSocketStatus
 
 interface ZiwoWsHandlerInterface {
     fun onApiSocketStatusChange (status: WebSocketStatus)
-    fun onAgentStatusChange ( status: AgentStatus)
+    fun onAgentStatusChange ( status: AgentStatus,source: AgentStatusSource?)
 }
 
 
@@ -28,6 +29,7 @@ data class GetLiveStatus(
     val force: Boolean,
     val since: Int,
     val status: AgentStatus?,
+    val source:AgentStatusSource?
 )
 
 data class Info(

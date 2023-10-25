@@ -36,7 +36,7 @@ class ZiwoWsApi(
                 value == WebSocketStatus.Failed
                 || value == WebSocketStatus.Disconnected
             ){
-                socketHandler?.onAgentStatusChange(AgentStatus.LoggedOut)
+                socketHandler?.onAgentStatusChange(AgentStatus.LoggedOut,null)
             }
             field = value
         }
@@ -45,19 +45,19 @@ class ZiwoWsApi(
     fun setLoginCredentials(callcenter: String, accessToken: String){
         this.callcenter = callcenter
         this.accessToken =  accessToken
-    }
-    /**  Opens the socket */
-    fun login() {
-
         val opts: IO.Options = IO.Options()
         opts.timeout = 30000  // set a timeout of 30 seconds
         opts.query = "access_token=$accessToken"
         opts.path = "/socket"
         opts.reconnection = true
         opts.transports = arrayOf("websocket")
+        socket = IO.socket("wss://$callcenter-api.aswat.co", opts);
+
+    }
+    /**  Opens the socket */
+    fun login() {
 
         try {
-            socket = IO.socket("wss://$callcenter-api.aswat.co", opts);
             socket
                 ?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
                     onReconnect()
@@ -133,7 +133,7 @@ class ZiwoWsApi(
 
     private fun onReconnect() {
         webSocketStatus = WebSocketStatus.Retrying
-        socketHandler?.onAgentStatusChange(AgentStatus.Retrying)
+        socketHandler?.onAgentStatusChange(AgentStatus.Retrying,null)
     }
 
     private fun onConnect(){
@@ -146,7 +146,7 @@ class ZiwoWsApi(
                 ziwoMain.logger(TAG, "${WsApiRoutes.GetLiveStatus} ${element::class.qualifiedName} $element ")
                 val messageType = object : TypeToken<WsApiRes<GetLiveStatus>>(){}.type
                 val message = gson.fromJson(element.toString(), messageType ) as WsApiRes<GetLiveStatus>
-                message.content.status?.let { status -> socketHandler?.onAgentStatusChange(status) }
+                message.content.status?.let { status -> socketHandler?.onAgentStatusChange(status,message.content.source) }
             }
         }
         socket?.on(WsApiRoutes.GetProfile) {
@@ -175,6 +175,7 @@ class ZiwoWsApi(
 
     public fun disconnect(){
         socket?.close()
+        webSocketStatus=WebSocketStatus.Disconnected
     }
 
 
