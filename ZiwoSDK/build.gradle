@@ -63,7 +63,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
 
     // my
-    implementation 'org.webrtc:google-webrtc:1.0.32006'
+    implementation 'org.webrtc:google-webrtc:1.0.+'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
     implementation ('io.socket:socket.io-client:2.1.0') {

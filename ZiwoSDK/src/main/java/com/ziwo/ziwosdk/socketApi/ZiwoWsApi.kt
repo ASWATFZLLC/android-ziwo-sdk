@@ -11,6 +11,8 @@ import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
 import okhttp3.WebSocketListener
+import java.util.*
+
 
 class ZiwoWsApi(
     var context: Context,
@@ -24,6 +26,9 @@ class ZiwoWsApi(
     // login
     private var callcenter: String? = null
     private var accessToken: String? = null
+    private var heartbeatTimer: Timer? = null
+
+
 
     // ws
     var socketHandler : ZiwoWsHandlerInterface? = null
@@ -85,6 +90,7 @@ class ZiwoWsApi(
                     ziwoMain.logger(TAG, " Socket.EVENT_CONNECT")
 
                     onConnect()
+
                 }
                 ?.on(Socket.EVENT_CONNECT_ERROR) {
                     for (element in it) {
@@ -96,6 +102,7 @@ class ZiwoWsApi(
                     ziwoMain.logger(TAG, " Socket.EVENT_DISCONNECT")
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
+
 
             socket?.io()?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
                 onReconnect()
@@ -118,9 +125,12 @@ class ZiwoWsApi(
 
                     webSocketStatus = WebSocketStatus.Disconnected
                 }
+
+
             socket?.connect()
         }
             catch ( e:java.net.SocketTimeoutException) {
+                webSocketStatus = WebSocketStatus.Failed
                 ziwoMain.logger(TAG, "Socket Timeout: ${e.message}");
                 // handle the exception
             }
@@ -159,6 +169,8 @@ class ZiwoWsApi(
         // subscribing
         socket?.emit("subscribe", WsApiRoutes.GetLiveStatus)
         socket?.emit(WsApiRoutes.GetLiveStatus, {})
+        startHeartbeat()
+
 
     }
 
@@ -174,11 +186,23 @@ class ZiwoWsApi(
     }
 
     public fun disconnect(){
+        heartbeatTimer?.cancel();
         socket?.close()
         webSocketStatus=WebSocketStatus.Disconnected
     }
 
+    private fun startHeartbeat() {
+        heartbeatTimer = Timer()
+        heartbeatTimer?.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                if (socket!!.connected()) {
+                    socket!!.emit("heartbeat", "ping")
+                    ziwoMain.logger(TAG, "heartbeat sent")
 
+                }
+            }
+        }, 0, 10000) // Send heartbeat every 10 seconds
+    }
 
 
 
