@@ -1,5 +1,8 @@
 package com.ziwo.ziwosdk.httpApi
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Ziwo
 import okhttp3.MediaType.Companion.toMediaType
@@ -12,7 +15,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class ZiwoApi(private val ziwo: Ziwo) {
+class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
 
     // client basics
     private val TAG = "[ZiwoApi]"
@@ -21,6 +24,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
     // login state
     private var accessToken = ""
     private var baseUrl = "" // api url
+
 
     // Set up logging interceptor
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -38,9 +42,14 @@ class ZiwoApi(private val ziwo: Ziwo) {
     private fun buildClient() {
         val headerInterceptor = HeaderInterceptor(this.accessToken)
         client = OkHttpClient.Builder()
-            .readTimeout(30, TimeUnit.SECONDS)  // Increase read timeout
-            .connectTimeout(30, TimeUnit.SECONDS)  // Increase connection timeout
+            .readTimeout(15, TimeUnit.SECONDS)  // Increase read timeout
+            .connectTimeout(15, TimeUnit.SECONDS)  // Increase connection timeout
             .addInterceptor(loggingInterceptor)
+            .addInterceptor( ChuckerInterceptor.Builder(appContext)
+                .collector(ChuckerCollector(appContext))
+                .maxContentLength(250_000L)
+                .alwaysReadResponseBody(true)
+                .build())
             .addInterceptor(headerInterceptor)
             .build()
         // Optionally, also rebuild your Retrofit instance to use the new OkHttpClient
@@ -89,7 +98,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.registerToken(deviceToken)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -118,7 +127,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.updateAgentStatus(status.code)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -127,7 +136,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.updateAgent(params)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -136,7 +145,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.getProfile()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -146,7 +155,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getListQueues()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -158,7 +167,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             )
             val response = service.autoLogin(requestBody)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -168,7 +177,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.logout()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -183,7 +192,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.autoLogout(requestBody)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -191,7 +200,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
         try {
             val response = service.resetPassword(userName)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -201,7 +210,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getAgents(skip)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -211,7 +220,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getCountries()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -265,7 +274,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getRecordingUrl(callId)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             "${response.body()?.content?.endpoint}$callId"
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
@@ -275,7 +284,7 @@ class ZiwoApi(private val ziwo: Ziwo) {
             val response = service.getStorageEndpoint()
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             "$baseUrl${response.body()?.content?.endpoint}"
-        } catch (ex: IOException) {
+        } catch (ex: Exception) {
             throw ex
         }
     }
