@@ -42,7 +42,7 @@ data class ZiwoApiLoginContentData(
     val autoAnswer: Boolean,
     val ccLogin: String,
     val ccPassword: String,
-    val contactNumber: @RawValue  Any,
+    val contactNumber: @RawValue  Any?,
     val createdAt: String,
     val firstName: String,
     val id: Int,
