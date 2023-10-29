@@ -10,7 +10,7 @@ class Ziwo(appContext: Context, public val debug: Boolean = false)  {
 
     // class logic
     private val TAG = "ZiwoSDK"
-    public var ziwoApiClient =  ZiwoApi(this)
+    public var ziwoApiClient =  ZiwoApi(appContext,this)
     public var vertoWs = VertoWs(appContext, this)
     public var ziwoApiWs = ZiwoWsApi(appContext, this)
 

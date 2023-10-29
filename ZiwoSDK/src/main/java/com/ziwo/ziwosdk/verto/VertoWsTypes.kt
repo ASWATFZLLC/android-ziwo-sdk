@@ -21,6 +21,7 @@ enum class WebSocketStatus {
     Failed,
     Closed,
     Retrying,
+    Reloggin
 }
 
 enum class VertoEvent {

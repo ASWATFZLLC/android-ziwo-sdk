@@ -7,6 +7,7 @@ import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import com.ziwo.ziwosdk.verto.*
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,6 +17,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.webrtc.SessionDescription
+import java.io.IOException
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -196,28 +198,34 @@ class VertoWs(
             VertoEvent.ClientReady -> {
 
                 //  send login command
-                try {
-                    GlobalScope.launch {
-                        ziwoMain.ziwoApiClient.autoLogin()
+                val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+                    // Handle the exception
+                    if (exception is IOException) {
+                        webSocketStatus = WebSocketStatus.Reloggin
+                        ziwoMain.logger(TAG, "IOException occurred: ${exception.message}")
+
+                    } else {
+                        myOnFailure()
+                        ziwoMain.logger(TAG, "ziwo api autologin failed $exception")
                     }
-                } catch (ex: java.lang.Exception){
-                    myOnFailure()
-                    ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
-                    ziwoMain.logger(TAG, ex)
-                    return
                 }
+
+                GlobalScope.launch(exceptionHandler) {
+                    ziwoMain.ziwoApiClient.autoLogin()
+                }
+
 
                 // update socket status
                 webSocketStatus = WebSocketStatus.Ready
                 // val message = gson.fromJson(rawSocketMessage, VertoMessage<VertoMessageLoginParams>()::class.java )
 
                 // run clean disconnected jobs
-                disconnectedJob =  GlobalScope.launch {
+                disconnectedJob = GlobalScope.launch {
 
                     delay(10000L) // wait 10 seconds to make sure the server wont reattach the calls
-                    callsList.forEach { it->
+                    callsList.forEach { it ->
                         val call = it.value
-                        if(call.eventsArray.last().event == Call.Companion.ZiwoEventType.Disconnected){
+                        if (call.eventsArray.last().event == Call.Companion.ZiwoEventType.Disconnected) {
                             call.hangup()
                         }
                     }
@@ -226,8 +234,8 @@ class VertoWs(
 
                 // process manual messages
                 manualMessagesList.forEach { manualVertoMessage ->
-                    client?.let{
-                        onMessage( it , manualVertoMessage.content)
+                    client?.let {
+                        onMessage(it, manualVertoMessage.content)
                     }
                 }
                 manualMessagesList.clear()
@@ -345,7 +353,8 @@ class VertoWs(
 
             else -> {}
         }
-    }
+
+        }
 
     /**
      * shared logic between onclosed and failure
@@ -394,6 +403,7 @@ class VertoWs(
         }
         callsList.clear()
         client?.close(1001, "logged out")
+
 
     }
 
