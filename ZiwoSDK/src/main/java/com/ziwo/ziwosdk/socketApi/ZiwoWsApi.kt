@@ -10,6 +10,9 @@ import com.ziwo.ziwosdk.verto.WebSocketStatus
 import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
 import java.util.*
 
@@ -151,14 +154,43 @@ class ZiwoWsApi(
         webSocketStatus = WebSocketStatus.Ready
 
         // listeners
-        socket?.on(WsApiRoutes.GetLiveStatus) {
-            for (element in it) {
-                ziwoMain.logger(TAG, "${WsApiRoutes.GetLiveStatus} ${element::class.qualifiedName} $element ")
-                val messageType = object : TypeToken<WsApiRes<GetLiveStatus>>(){}.type
-                val message = gson.fromJson(element.toString(), messageType ) as WsApiRes<GetLiveStatus>
-                message.content.status?.let { status -> socketHandler?.onAgentStatusChange(status,message.content.source) }
+        socket?.on(WsApiRoutes.GetLiveStatus) { args ->
+            GlobalScope.launch(Dispatchers.IO) {
+                for (element in args) {
+                    try {
+                        element?.let {
+                            ziwoMain.logger(
+                                TAG,
+                                "${WsApiRoutes.GetLiveStatus} ${it::class.qualifiedName} $it"
+                            )
+                        }
+                        val messageType = object : TypeToken<WsApiRes<GetLiveStatus>>() {}.type
+
+                        if (!element.toString().isNullOrEmpty()) {
+                            val message = gson.fromJson(
+                                element.toString(),
+                                messageType
+                            ) as WsApiRes<GetLiveStatus>
+                            ziwoMain.logger(TAG, "$message")
+
+                            message.content?.let { content ->
+                                content.status?.let { status ->
+                                    socketHandler?.onAgentStatusChange(status, content.source)
+                                }
+                            }
+                        } else {
+                            ziwoMain.logger(TAG, "Expected JSON Object but found: $element")
+                        }
+                    } catch (e: Exception) {
+                        ziwoMain.logger(
+                            TAG,
+                            "Error processing ${WsApiRoutes.GetLiveStatus} message: $e"
+                        )
+                    }
+                }
             }
         }
+
         socket?.on(WsApiRoutes.GetProfile) {
             for (element in it) {
                 ziwoMain.logger(TAG, "${WsApiRoutes.GetProfile} $element")
