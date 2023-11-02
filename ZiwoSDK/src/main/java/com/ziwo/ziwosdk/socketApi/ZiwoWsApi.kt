@@ -7,6 +7,10 @@ import com.ziwo.ziwosdk.SessionIdNotSetException
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.AgentStatus
 import com.ziwo.ziwosdk.verto.WebSocketStatus
+import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
@@ -14,13 +18,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
+import org.json.JSONArray
 import java.util.*
 
 
 class ZiwoWsApi(
     var context: Context,
     var ziwoMain: Ziwo
-)  : WebSocketListener()  {
+) : WebSocketListener() {
 
     val TAG = "ZiwoApiSocket"
     var socket: Socket? = null;
@@ -30,12 +35,12 @@ class ZiwoWsApi(
     private var callcenter: String? = null
     private var accessToken: String? = null
     private var heartbeatTimer: Timer? = null
-
+    var disposable:Disposable?=null
 
 
     // ws
-    var socketHandler : ZiwoWsHandlerInterface? = null
-    var webSocketStatus : WebSocketStatus =  WebSocketStatus.Disconnected
+    var socketHandler: ZiwoWsHandlerInterface? = null
+    var webSocketStatus: WebSocketStatus = WebSocketStatus.Disconnected
         set(value) {
             socketHandler?.onApiSocketStatusChange(value)
             ziwoMain.logger(TAG, "status $webSocketStatus")
@@ -43,16 +48,16 @@ class ZiwoWsApi(
             if (
                 value == WebSocketStatus.Failed
                 || value == WebSocketStatus.Disconnected
-            ){
-                socketHandler?.onAgentStatusChange(AgentStatus.LoggedOut,null)
+            ) {
+                socketHandler?.onAgentStatusChange(AgentStatus.LoggedOut, null)
             }
             field = value
         }
 
     /** set login paremeters [callcenter] [accessToken] */
-    fun setLoginCredentials(callcenter: String, accessToken: String){
+    fun setLoginCredentials(callcenter: String, accessToken: String) {
         this.callcenter = callcenter
-        this.accessToken =  accessToken
+        this.accessToken = accessToken
         val opts: IO.Options = IO.Options()
         opts.timeout = 30000  // set a timeout of 30 seconds
         opts.query = "access_token=$accessToken"
@@ -62,6 +67,7 @@ class ZiwoWsApi(
         socket = IO.socket("wss://$callcenter-api.aswat.co", opts);
 
     }
+
     /**  Opens the socket */
     fun login() {
 
@@ -131,13 +137,11 @@ class ZiwoWsApi(
 
 
             socket?.connect()
-        }
-            catch ( e:java.net.SocketTimeoutException) {
-                webSocketStatus = WebSocketStatus.Failed
-                ziwoMain.logger(TAG, "Socket Timeout: ${e.message}");
-                // handle the exception
-            }
-         catch (ex: Exception){
+        } catch (e: java.net.SocketTimeoutException) {
+            webSocketStatus = WebSocketStatus.Failed
+            ziwoMain.logger(TAG, "Socket Timeout: ${e.message}");
+            // handle the exception
+        } catch (ex: Exception) {
             webSocketStatus = WebSocketStatus.Failed
             ziwoMain.logger(TAG, "opensocketFailed ${ex.toString()}")
         }
@@ -146,12 +150,13 @@ class ZiwoWsApi(
 
     private fun onReconnect() {
         webSocketStatus = WebSocketStatus.Retrying
-        socketHandler?.onAgentStatusChange(AgentStatus.Retrying,null)
+        socketHandler?.onAgentStatusChange(AgentStatus.Retrying, null)
     }
 
-    private fun onConnect(){
+    private fun onConnect() {
 
         webSocketStatus = WebSocketStatus.Ready
+
 
         // listeners
         socket?.on(WsApiRoutes.GetLiveStatus) { args ->
@@ -197,14 +202,12 @@ class ZiwoWsApi(
             }
         }
 
-        // TODO custom subscribe to different events
-        // subscribing
+
         socket?.emit("subscribe", WsApiRoutes.GetLiveStatus)
         socket?.emit(WsApiRoutes.GetLiveStatus, {})
         startHeartbeat()
-
-
     }
+
 
     /**
      * reconnect the websocket, throws error if haven't loggedin in main
@@ -214,27 +217,30 @@ class ZiwoWsApi(
         if ( this.callcenter.isNullOrEmpty() || this.accessToken.isNullOrEmpty()){
             throw SessionIdNotSetException("login not initialized")
         }
+        if (!callcenter.isNullOrEmpty()&&!accessToken.isNullOrEmpty())
+            setLoginCredentials(callcenter!!, accessToken!!)
         login()
     }
 
-    public fun disconnect(){
-        heartbeatTimer?.cancel();
-        socket?.close()
-        webSocketStatus=WebSocketStatus.Disconnected
-    }
+public fun disconnect() {
+    heartbeatTimer?.cancel();
+    disposable?.dispose()
+    socket?.close()
+    webSocketStatus = WebSocketStatus.Disconnected
+}
 
-    private fun startHeartbeat() {
-        heartbeatTimer = Timer()
-        heartbeatTimer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                if (socket!!.connected()) {
-                    socket!!.emit("heartbeat", "ping")
-                    ziwoMain.logger(TAG, "heartbeat sent")
+private fun startHeartbeat() {
+    heartbeatTimer = Timer()
+    heartbeatTimer?.scheduleAtFixedRate(object : TimerTask() {
+        override fun run() {
+            if (socket!!.connected()) {
+                socket!!.emit("heartbeat", "ping")
+                ziwoMain.logger(TAG, "heartbeat sent")
 
-                }
             }
-        }, 0, 10000) // Send heartbeat every 10 seconds
-    }
+        }
+    }, 0, 10000) // Send heartbeat every 10 seconds
+}
 
 
 

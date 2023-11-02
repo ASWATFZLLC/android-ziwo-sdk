@@ -44,7 +44,7 @@ interface ZiwoApiService {
     @POST("auth/logout")
     suspend fun logout(): Response<String>
 
-    @PUT("agents/logout")
+    @PUT("agents/autologout")
     suspend fun autoLogout(@Body requestBody: RequestBody): Response<String>
 
     @POST("users/password/reset")
