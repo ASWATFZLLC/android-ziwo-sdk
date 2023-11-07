@@ -7,10 +7,6 @@ import com.ziwo.ziwosdk.SessionIdNotSetException
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.AgentStatus
 import com.ziwo.ziwosdk.verto.WebSocketStatus
-import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
@@ -18,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
-import org.json.JSONArray
 import java.util.*
 
 
@@ -35,8 +30,6 @@ class ZiwoWsApi(
     private var callcenter: String? = null
     private var accessToken: String? = null
     private var heartbeatTimer: Timer? = null
-    var disposable:Disposable?=null
-
 
     // ws
     var socketHandler: ZiwoWsHandlerInterface? = null
@@ -70,36 +63,11 @@ class ZiwoWsApi(
 
     /**  Opens the socket */
     fun login() {
-
         try {
             socket
-                ?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
-                    onReconnect()
-                    ziwoMain.logger(TAG, "Manager EVENT_RECONNECT_ATTEMPT")
-
-                }
-                ?.on(Manager.EVENT_RECONNECT) {
-                    onConnect()
-                    ziwoMain.logger(TAG, " Manager EVENT_RECONNECT")
-
-                }
-                ?.on(Manager.EVENT_RECONNECT_ERROR) {
-                    for (element in it) {
-                        ziwoMain.logger(TAG, "EVENT_ERROR $element")
-                    }
-                    webSocketStatus = WebSocketStatus.Failed
-                }
-                ?.on(Manager.EVENT_RECONNECT_FAILED) {
-                    ziwoMain.logger(TAG, " Socket.EVENT_RECONNECT_FAILED")
-
-                    webSocketStatus = WebSocketStatus.Disconnected
-                }
-
                 ?.on(Socket.EVENT_CONNECT) {
                     ziwoMain.logger(TAG, " Socket.EVENT_CONNECT")
-
                     onConnect()
-
                 }
                 ?.on(Socket.EVENT_CONNECT_ERROR) {
                     for (element in it) {
@@ -116,12 +84,10 @@ class ZiwoWsApi(
             socket?.io()?.on(Manager.EVENT_RECONNECT_ATTEMPT) {
                 onReconnect()
                 ziwoMain.logger(TAG, "Manager EVENT_RECONNECT_ATTEMPT")
-
-            }
+                }
                 ?.on(Manager.EVENT_RECONNECT) {
-                    onConnect()
+                    onReconnect()
                     ziwoMain.logger(TAG, " Manager EVENT_RECONNECT")
-
                 }
                 ?.on(Manager.EVENT_RECONNECT_ERROR) {
                     for (element in it) {
@@ -213,6 +179,7 @@ class ZiwoWsApi(
      * reconnect the websocket, throws error if haven't loggedin in main
      */
     public fun reconnect(){
+        ziwoMain.logger(TAG,"reconnect and restart session")
         socket?.close()
         if ( this.callcenter.isNullOrEmpty() || this.accessToken.isNullOrEmpty()){
             throw SessionIdNotSetException("login not initialized")
@@ -224,18 +191,17 @@ class ZiwoWsApi(
 
 public fun disconnect() {
     heartbeatTimer?.cancel();
-    disposable?.dispose()
-    socket?.close()
     webSocketStatus = WebSocketStatus.Disconnected
+    socket?.close()
 }
 
 private fun startHeartbeat() {
     heartbeatTimer = Timer()
     heartbeatTimer?.scheduleAtFixedRate(object : TimerTask() {
         override fun run() {
-            if (socket!!.connected()) {
-                socket!!.emit("heartbeat", "ping")
-                ziwoMain.logger(TAG, "heartbeat sent")
+            if (socket?.connected() == true) {
+                socket?.emit("heartbeat", "ping")
+                ziwoMain.logger(TAG, "heartbeat sent $webSocketStatus")
 
             }
         }
