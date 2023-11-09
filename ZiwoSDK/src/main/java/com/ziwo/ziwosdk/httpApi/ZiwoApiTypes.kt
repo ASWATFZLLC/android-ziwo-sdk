@@ -246,10 +246,10 @@ data class AgentCallInfo(
 
 @Parcelize
 data class AgentCallContentExtendedInfo(
-    val agents: AgentCallContentExtendedInfoAgents,
-    val numbers: AgentCallContentExtendedInfoNumbers,
-    val positions: AgentCallContentExtendedInfoPositions,
-    val queues: AgentCallContentExtendedInfoQueues
+    val agents: AgentCallContentExtendedInfoAgents?,
+    val numbers: AgentCallContentExtendedInfoNumbers?,
+    val positions: AgentCallContentExtendedInfoPositions?,
+    val queues: AgentCallContentExtendedInfoQueues?
 )  : Parcelable
 
 @Parcelize
