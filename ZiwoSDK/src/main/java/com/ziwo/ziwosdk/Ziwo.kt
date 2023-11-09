@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import com.ziwo.ziwosdk.socketApi.ZiwoWsApi
-import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoWs
+import com.ziwo.ziwosdk.verto.VertoWs
 
 class Ziwo(appContext: Context, public val debug: Boolean = false)  {
 

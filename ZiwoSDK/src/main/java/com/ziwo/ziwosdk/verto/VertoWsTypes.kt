@@ -21,7 +21,7 @@ enum class WebSocketStatus {
     Failed,
     Closed,
     Retrying,
-    Reloggin
+    FailTimeOut
 }
 
 enum class VertoEvent {
@@ -38,6 +38,8 @@ enum class VertoEvent {
     @SerializedName("verto.bye") Bye,
     /** used internally to perform login */
     @SerializedName("login") LOGIN,
+
+    @SerializedName("heatBeat") HeartBeat,
 
     // TODO
     @SerializedName("verto.attach")

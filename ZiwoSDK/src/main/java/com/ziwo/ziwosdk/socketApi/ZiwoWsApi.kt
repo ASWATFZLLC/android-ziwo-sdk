@@ -201,8 +201,6 @@ private fun startHeartbeat() {
         override fun run() {
             if (socket?.connected() == true) {
                 socket?.emit("heartbeat", "ping")
-                ziwoMain.logger(TAG, "heartbeat sent $webSocketStatus")
-
             }
         }
     }, 0, 10000) // Send heartbeat every 10 seconds

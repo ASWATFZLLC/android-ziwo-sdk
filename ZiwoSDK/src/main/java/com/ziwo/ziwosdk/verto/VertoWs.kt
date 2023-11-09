@@ -1,4 +1,4 @@
-package com.ziwo.ziwosdk.utils.ziwoSdk.verto
+package com.ziwo.ziwosdk.verto
 
 import android.content.Context
 import com.google.gson.Gson
@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
-import com.ziwo.ziwosdk.verto.*
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -174,6 +173,11 @@ class VertoWs(
         finishWebsocket()
 
         onFailCounter++
+        if (onFailCounter>20){
+            onFailCounter=0
+            webSocketStatus= WebSocketStatus.FailTimeOut
+            return
+        }
         webSocketStatus = WebSocketStatus.Failed
 
         Timer().schedule(5000) {
@@ -201,7 +205,6 @@ class VertoWs(
                 val exceptionHandler = CoroutineExceptionHandler { _, exception ->
                     // Handle the exception
                     if (exception is IOException) {
-                        webSocketStatus = WebSocketStatus.Reloggin
                         ziwoMain.logger(TAG, "IOException occurred: ${exception.message}")
 
                     } else {

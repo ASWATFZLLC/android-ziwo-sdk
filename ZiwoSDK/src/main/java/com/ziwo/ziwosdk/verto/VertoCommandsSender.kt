@@ -1,9 +1,8 @@
-package com.ziwo.ziwosdk.utils.ziwoSdk.verto
+package com.ziwo.ziwosdk.verto
 
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
-import com.ziwo.ziwosdk.verto.*
 import java.util.*
 
 
