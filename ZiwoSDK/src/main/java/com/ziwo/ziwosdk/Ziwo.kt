@@ -4,13 +4,13 @@ import android.content.Context
 import android.util.Log
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import com.ziwo.ziwosdk.socketApi.ZiwoWsApi
-import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoWs
+import com.ziwo.ziwosdk.verto.VertoWs
 
 class Ziwo(appContext: Context, public val debug: Boolean = false)  {
 
     // class logic
     private val TAG = "ZiwoSDK"
-    public var ziwoApiClient =  ZiwoApi(this)
+    public var ziwoApiClient =  ZiwoApi(appContext,this)
     public var vertoWs = VertoWs(appContext, this)
     public var ziwoApiWs = ZiwoWsApi(appContext, this)
 

@@ -1,42 +1,41 @@
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'maven-publish'
+
 
 version = libraryVersion
 group = publishedGroupId    // Maven Group ID for the artifact
 
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                packaging 'aar'
-                groupId publishedGroupId
-                artifactId artifact
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
 
-                // Add your description here
-                name libraryName
-                description libraryDescription
-                url siteUrl
+            groupId = publishedGroupId
+            artifactId = artifact
+            version = libraryVersion
 
-                // Set your license
+            pom {
+                name = libraryName
+                description = libraryDescription
+                url = siteUrl
+
                 licenses {
                     license {
-                        name licenseName
-                        url licenseUrl
+                        name = licenseName
+                        url = licenseUrl
                     }
                 }
+
                 developers {
                     developer {
-                        id developerId
-                        name developerName
-                        email developerEmail
+                        id = developerId
+                        name = developerName
+                        email = developerEmail
                     }
                 }
-                scm {
-                    connection gitUrl
-                    developerConnection gitUrl
-                    url siteUrl
 
+                scm {
+                    connection = gitUrl
+                    developerConnection = gitUrl
+                    url = siteUrl
                 }
             }
         }
@@ -57,34 +56,8 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveClassifier.set('javadoc')
     from javadoc.destinationDir
 }
+
 artifacts {
     archives javadocJar
     archives sourcesJar
-}
-
-// Bintray
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-
-    configurations = ['archives']
-    pkg {
-        userOrg = System.getenv('BINTRAY_ORG')
-        repo = bintrayRepo
-        name = bintrayName
-        desc = libraryDescription
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        licenses = allLicenses
-        publish = true
-        publicDownloadNumbers = true
-        version {
-            desc = libraryDescription
-            // Uncomment 4 lines below to enable gpg auto signing
-            //gpg {
-            //    sign = true //Determines whether to GPG sign the files. The default is false
-            //    passphrase = properties.getProperty("bintray.gpg.password")
-            //}
-        }
-    }
 }

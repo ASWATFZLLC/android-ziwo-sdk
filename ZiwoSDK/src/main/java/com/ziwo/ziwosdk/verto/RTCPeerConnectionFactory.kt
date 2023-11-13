@@ -3,7 +3,6 @@ package com.ziwo.ziwosdk.verto
 import android.content.Context
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
-import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoCommandsSender
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.webrtc.*

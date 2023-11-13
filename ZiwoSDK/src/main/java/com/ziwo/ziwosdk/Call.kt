@@ -1,7 +1,7 @@
 package com.ziwo.ziwosdk
 
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
-import com.ziwo.ziwosdk.utils.ziwoSdk.verto.VertoCommandsSender
+import com.ziwo.ziwosdk.verto.VertoCommandsSender
 import com.ziwo.ziwosdk.verto.RTCPeerConnectionFactory
 import com.ziwo.ziwosdk.verto.VertoByeReason
 import org.webrtc.MediaStream

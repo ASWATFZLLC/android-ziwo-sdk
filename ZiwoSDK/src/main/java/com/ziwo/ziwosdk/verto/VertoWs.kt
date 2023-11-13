@@ -1,4 +1,4 @@
-package com.ziwo.ziwosdk.utils.ziwoSdk.verto
+package com.ziwo.ziwosdk.verto
 
 import android.content.Context
 import com.google.gson.Gson
@@ -6,9 +6,11 @@ import com.google.gson.reflect.TypeToken
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
-import com.ziwo.ziwosdk.verto.*
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -16,6 +18,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.webrtc.SessionDescription
+import java.io.IOException
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -49,24 +52,28 @@ class VertoWs(
     var vertoHandler: VertoHandlerInterface? = null
     var attachJob : Job? = null
     var disconnectedJob: Job? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
 
     /**  returns login string used in various send command messages  */
     fun getLogin(): String {
         return "$userName@$callcenter.aswat.co"
     }
-
-    /**  Opens the socket and set login paremeters [userName] [userPassword] */
-    fun login(callcenter: String, userName: String, userPassword: String, sessionId: String) {
+    /**   set login paremeters [userName] [userPassword] */
+    fun setLoginCredentials(callcenter: String, userName: String, userPassword: String, sessionId: String) {
 
         this.callcenter = callcenter
         this.userName = userName;
         this.userPassword = userPassword;
-        this.sessionId =  sessionId
+        this.sessionId = sessionId
+    }
 
+    /**  Opens the socket and set login paremeters [userName] [userPassword] */
+    fun login() {
         ziwoMain.logger(TAG, "login")
         ziwoMain.logger(TAG, "login uuid $sessionId")
 
-        val request = okhttp3.Request.Builder().url("wss://$callcenter.aswat.co:8084").build()
+        val request = okhttp3.Request.Builder().url("wss://$callcenter-api.aswat.co:8082").build()
         val listener = this;
 
         client = OkHttpClient().newWebSocket(request, listener )
@@ -170,6 +177,11 @@ class VertoWs(
         finishWebsocket()
 
         onFailCounter++
+        if (onFailCounter>20){
+            onFailCounter=0
+            webSocketStatus= WebSocketStatus.FailTimeOut
+            return
+        }
         webSocketStatus = WebSocketStatus.Failed
 
         Timer().schedule(5000) {
@@ -177,7 +189,7 @@ class VertoWs(
                 ziwoMain.logger(TAG, "onFailureCounter $onFailCounter")
 
                 webSocketStatus = WebSocketStatus.Retrying
-                login(callcenter, userName, userPassword, sessionId)
+                login()
             }
         }
     }
@@ -194,26 +206,33 @@ class VertoWs(
             VertoEvent.ClientReady -> {
 
                 //  send login command
-                try {
-                    ziwoMain.ziwoApiClient.autoLogin()
-                } catch (ex: java.lang.Exception){
-                    myOnFailure()
-                    ziwoMain.logger(TAG, "ziwo api autologin failed $ex")
-                    ziwoMain.logger(TAG, ex)
-                    return
+                val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+                    // Handle the exception
+                    if (exception is IOException) {
+                        ziwoMain.logger(TAG, "IOException occurred: ${exception.message}")
+
+                    } else {
+                        myOnFailure()
+                        ziwoMain.logger(TAG, "ziwo api autologin failed $exception")
+                    }
                 }
+
+                coroutineScope.launch(exceptionHandler) {
+                    ziwoMain.ziwoApiClient.autoLogin()
+                }
+
 
                 // update socket status
                 webSocketStatus = WebSocketStatus.Ready
                 // val message = gson.fromJson(rawSocketMessage, VertoMessage<VertoMessageLoginParams>()::class.java )
 
                 // run clean disconnected jobs
-                disconnectedJob =  GlobalScope.launch {
+                disconnectedJob = coroutineScope.launch {
 
                     delay(10000L) // wait 10 seconds to make sure the server wont reattach the calls
-                    callsList.forEach { it->
+                    callsList.forEach { it ->
                         val call = it.value
-                        if(call.eventsArray.last().event == Call.Companion.ZiwoEventType.Disconnected){
+                        if (call.eventsArray.last().event == Call.Companion.ZiwoEventType.Disconnected) {
                             call.hangup()
                         }
                     }
@@ -222,8 +241,8 @@ class VertoWs(
 
                 // process manual messages
                 manualMessagesList.forEach { manualVertoMessage ->
-                    client?.let{
-                        onMessage( it , manualVertoMessage.content)
+                    client?.let {
+                        onMessage(it, manualVertoMessage.content)
                     }
                 }
                 manualMessagesList.clear()
@@ -284,7 +303,7 @@ class VertoWs(
             VertoEvent.Attach -> {
 
                 attachJob?.cancel()
-                attachJob = GlobalScope.launch {
+                attachJob = coroutineScope.launch {
 
                     val messageType =
                         object : TypeToken<VertoMessage<VertoMessageAttachParams>>() {}.type
@@ -339,8 +358,10 @@ class VertoWs(
                 // val message = gson.fromJson(rawSocketMessage, messageType ) as VertoMessage<VertoMessageAnswerParams>
             }
 
+            else -> {}
         }
-    }
+
+        }
 
     /**
      * shared logic between onclosed and failure
@@ -390,12 +411,17 @@ class VertoWs(
         callsList.clear()
         client?.close(1001, "logged out")
 
+
     }
 
     fun reconnect(){
-        // TODO: Check vars first
         logout()
-        login(callcenter, userName, userPassword, sessionId)
+        login()
+    }
+
+    fun cleanup() {
+        client?.close(1001, "logged out")
+        coroutineScope.cancel()
     }
 
 }

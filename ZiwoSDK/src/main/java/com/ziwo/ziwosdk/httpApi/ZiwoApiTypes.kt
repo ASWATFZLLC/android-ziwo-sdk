@@ -16,6 +16,11 @@ enum class AgentStatus(val code: Int){
     @SerializedName("Outgoing") Outgoing(4),
 }
 
+enum class AgentStatusSource(val value: String) {
+    @SerializedName("agent") AGENT("agent"),
+    @SerializedName("fs-disconnect") FS_DISCONNECT("fs-disconnect");
+}
+
 
 
 
@@ -37,18 +42,18 @@ data class ZiwoApiLoginContentData(
     val autoAnswer: Boolean,
     val ccLogin: String,
     val ccPassword: String,
-    val contactNumber: @RawValue  Any,
+    val contactNumber: @RawValue  Any?,
     val createdAt: String,
     val firstName: String,
     val id: Int,
     val lastLoginAt: String,
     val lastName: String,
-    val noAnswerDelayTime: @RawValue  Any,
+    val noAnswerDelayTime: @RawValue  Any?,
     val noAnswerTimeout: Int,
     val outboundRoaming: Boolean,
     val photo: String?,
     val profileType: String,
-    val roamingContactNumber: String,
+    val roamingContactNumber: String?,
     val roamingTimeout: Int,
     val roleId: Int,
     val status: String,
@@ -81,6 +86,11 @@ data class ZiwoApiGetAgentsContent(
     val liveInfo: ZiwoApiGetAgentsLiveInfo?,
     val photo: String?
 )  : Parcelable
+data class ZiwoApiGetAgentsResponse(
+    val content: List<ZiwoApiGetAgentsContent>?
+)data class ListQueuesResponse(
+    val content: List<ListQueuesContent>?
+)
 
 @Parcelize
 data class ZiwoApiGetAgentsLiveInfo(
@@ -109,6 +119,16 @@ data class ZiwoApiCountriesContent(
     val sample: ZiwoApiCountriesContentSample,
     val tld: String
 )  : Parcelable
+data class ZiwoApiCountriesResponse(
+    val content: List<ZiwoApiCountriesContent>
+)
+data class RecordingUrlResponse(
+    val content: RecordingUrlContent
+)
+
+data class RecordingUrlContent(
+    val endpoint: String
+)
 
 @Parcelize
 data class ZiwoApiCountriesContentSample(
@@ -226,10 +246,10 @@ data class AgentCallInfo(
 
 @Parcelize
 data class AgentCallContentExtendedInfo(
-    val agents: AgentCallContentExtendedInfoAgents,
-    val numbers: AgentCallContentExtendedInfoNumbers,
-    val positions: AgentCallContentExtendedInfoPositions,
-    val queues: AgentCallContentExtendedInfoQueues
+    val agents: AgentCallContentExtendedInfoAgents?,
+    val numbers: AgentCallContentExtendedInfoNumbers?,
+    val positions: AgentCallContentExtendedInfoPositions?,
+    val queues: AgentCallContentExtendedInfoQueues?
 )  : Parcelable
 
 @Parcelize
