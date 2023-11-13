@@ -7,8 +7,10 @@ import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
 import com.ziwo.ziwosdk.httpApi.ZiwoApi
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -50,6 +52,8 @@ class VertoWs(
     var vertoHandler: VertoHandlerInterface? = null
     var attachJob : Job? = null
     var disconnectedJob: Job? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
 
     /**  returns login string used in various send command messages  */
     fun getLogin(): String {
@@ -213,7 +217,7 @@ class VertoWs(
                     }
                 }
 
-                GlobalScope.launch(exceptionHandler) {
+                coroutineScope.launch(exceptionHandler) {
                     ziwoMain.ziwoApiClient.autoLogin()
                 }
 
@@ -223,7 +227,7 @@ class VertoWs(
                 // val message = gson.fromJson(rawSocketMessage, VertoMessage<VertoMessageLoginParams>()::class.java )
 
                 // run clean disconnected jobs
-                disconnectedJob = GlobalScope.launch {
+                disconnectedJob = coroutineScope.launch {
 
                     delay(10000L) // wait 10 seconds to make sure the server wont reattach the calls
                     callsList.forEach { it ->
@@ -299,7 +303,7 @@ class VertoWs(
             VertoEvent.Attach -> {
 
                 attachJob?.cancel()
-                attachJob = GlobalScope.launch {
+                attachJob = coroutineScope.launch {
 
                     val messageType =
                         object : TypeToken<VertoMessage<VertoMessageAttachParams>>() {}.type
@@ -411,9 +415,13 @@ class VertoWs(
     }
 
     fun reconnect(){
-        // TODO: Check vars first
         logout()
         login()
+    }
+
+    fun cleanup() {
+        client?.close(1001, "logged out")
+        coroutineScope.cancel()
     }
 
 }

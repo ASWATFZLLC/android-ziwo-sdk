@@ -10,8 +10,11 @@ import com.ziwo.ziwosdk.verto.WebSocketStatus
 import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
 import java.util.*
@@ -21,8 +24,10 @@ class ZiwoWsApi(
     var context: Context,
     var ziwoMain: Ziwo
 ) : WebSocketListener() {
-
-    val TAG = "ZiwoApiSocket"
+    companion object {
+        private const val TAG = "ZiwoApiSocket"
+        private const val HEARTBEAT_INTERVAL_MS = 10000L // 10 seconds
+    }
     var socket: Socket? = null;
     var gson = Gson()
 
@@ -46,6 +51,7 @@ class ZiwoWsApi(
             }
             field = value
         }
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     /** set login paremeters [callcenter] [accessToken] */
     fun setLoginCredentials(callcenter: String, accessToken: String) {
@@ -126,7 +132,7 @@ class ZiwoWsApi(
 
         // listeners
         socket?.on(WsApiRoutes.GetLiveStatus) { args ->
-            GlobalScope.launch(Dispatchers.IO) {
+            coroutineScope.launch{
                 for (element in args) {
                     try {
                         element?.let {
@@ -190,22 +196,24 @@ class ZiwoWsApi(
     }
 
 public fun disconnect() {
-    heartbeatTimer?.cancel();
-    webSocketStatus = WebSocketStatus.Disconnected
-    socket?.close()
+    coroutineScope.launch {
+        heartbeatTimer?.cancel();
+        webSocketStatus = WebSocketStatus.Disconnected
+        socket?.close()
+    }
 }
 
-private fun startHeartbeat() {
-    heartbeatTimer = Timer()
-    heartbeatTimer?.scheduleAtFixedRate(object : TimerTask() {
-        override fun run() {
-            if (socket?.connected() == true) {
-                socket?.emit("heartbeat", "ping")
+    private fun startHeartbeat() {
+        coroutineScope.launch {
+            while (isActive) {
+                delay(HEARTBEAT_INTERVAL_MS)
+                socket?.takeIf { it.connected() }?.emit("heartbeat", "ping")
             }
         }
-    }, 0, 10000) // Send heartbeat every 10 seconds
-}
+    }
 
-
-
+    fun cleanup() {
+        socket?.close()
+        coroutineScope.cancel()
+    }
 }
