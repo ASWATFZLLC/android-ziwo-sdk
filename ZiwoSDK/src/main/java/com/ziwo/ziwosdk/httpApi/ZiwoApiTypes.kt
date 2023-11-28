@@ -502,3 +502,5 @@ data class PutAgentParams(
     val countryCode: String? = null,
     val languageCode: String? = null,
 )
+
+data class GeographicAccessResponse(val policy: String, val result: Boolean)

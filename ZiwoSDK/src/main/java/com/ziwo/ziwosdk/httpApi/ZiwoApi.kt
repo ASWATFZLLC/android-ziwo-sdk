@@ -1,12 +1,14 @@
 package com.ziwo.ziwosdk.httpApi
 
 import android.content.Context
+import android.util.Log
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Ziwo
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -45,6 +47,7 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
             .readTimeout(15, TimeUnit.SECONDS)  // Increase read timeout
             .connectTimeout(15, TimeUnit.SECONDS)  // Increase connection timeout
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(CacheControlInterceptor())
             .addInterceptor( ChuckerInterceptor.Builder(appContext)
                 .collector(ChuckerCollector(appContext))
                 .maxContentLength(250_000L)
@@ -103,10 +106,13 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
         }
     }
 
-    suspend fun login(callCenter: String, userName: String, userPassword: String, vertoSessionId: String): ZiwoApiLoginContentData? {
+    suspend fun login(callCenter: String, userName: String, userPassword: String, vertoSessionId: String,shouldCheckGeographicAccess:Boolean ): ZiwoApiLoginContentData? {
         if (retrofit==null||service==null)
             updateBaseUrl(callCenter)
         try {
+            if (shouldCheckGeographicAccess&&!checkGeographicAccess(callCenter, userName)) {
+                throw IOException("Geographic Access Denied")
+            }
             val response = service.login(callCenter, userName, userPassword, vertoSessionId)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             if( response.body()?.content?.type != "agent"){
@@ -121,6 +127,31 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
         } catch (ex: Exception) {
             // handle exception or rethrow it
             throw ex
+        }
+    }
+    private suspend fun checkGeographicAccess(callCenter: String, userName: String): Boolean {
+        val url = "https://s3gmtzv4z2uel4gy7k5cnjov5a0tehjm.lambda-url.eu-west-3.on.aws/"
+        val httpClient = OkHttpClient()
+        val request = Request.Builder()
+            .url("$url?tenant=$callCenter&lg=$userName")
+            .build()
+
+        return try {
+            val response = httpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string()
+                Log.d(TAG, "checkAdditionalApi Response: $responseBody")
+
+                // Assuming the response body is a plain text "true" or "false"
+                val apiResponse = Gson().fromJson(responseBody, GeographicAccessResponse::class.java)
+                apiResponse?.result ?: false
+            } else {
+                Log.e(TAG, "checkAdditionalApi Error: Response Code ${response.code}")
+                false
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "checkAdditionalApi Exception: ${ex.message}")
+            false
         }
     }
     suspend fun updateAgentStatus(status: AgentStatus) {
@@ -205,9 +236,9 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
         }
     }
 
-    suspend fun getAgents(skip: Int = 0): List<ZiwoApiGetAgentsContent>? {
+    suspend fun getAgents(useCache: Boolean =true, skip: Int = 0): List<ZiwoApiGetAgentsContent>? {
         return try {
-            val response = service.getAgents(skip)
+            val response = service.getAgents(useCache, skip)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
         } catch (ex: Exception) {

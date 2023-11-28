@@ -1,5 +1,5 @@
 # Keep data classes and all of their members from being obfuscated
--keepclasseswithmembers class com.ziwo.ziwosdk.** {
+-keep class com.ziwo.ziwosdk.** {
     public ** component1();
     <fields>;
 }
