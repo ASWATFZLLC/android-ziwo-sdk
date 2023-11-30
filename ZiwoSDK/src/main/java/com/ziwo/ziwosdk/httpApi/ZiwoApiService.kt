@@ -6,6 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Query
@@ -52,7 +53,8 @@ interface ZiwoApiService {
     suspend fun resetPassword(@Field("username") userName: String): Response<Void>
 
     @GET("agent/agents")
-    suspend fun getAgents(@Query("skip") skip: Int = 0): Response<ZiwoApiGetAgentsResponse>
+    suspend fun getAgents(@Header("X-Use-Cache") useCache: Boolean,
+        @Query("skip") skip: Int = 0): Response<ZiwoApiGetAgentsResponse>
 
     @GET("static/countries")
     suspend fun getCountries(): Response<ZiwoApiCountriesResponse>

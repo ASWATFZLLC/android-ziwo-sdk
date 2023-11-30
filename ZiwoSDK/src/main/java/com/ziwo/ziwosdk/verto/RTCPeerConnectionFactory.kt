@@ -3,6 +3,8 @@ package com.ziwo.ziwosdk.verto
 import android.content.Context
 import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.webrtc.*
@@ -231,7 +233,7 @@ class RTCPeerConnectionFactory  constructor(
 
                         } else {
                             // this Globalscope is needed because of weird bug dont remove it other rtc.close() will get stuck
-                            GlobalScope.launch {
+                            CoroutineScope(Dispatchers.IO).launch {
                                 call.hangup()
                             }
                         }

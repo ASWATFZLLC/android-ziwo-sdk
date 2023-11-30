@@ -240,9 +240,13 @@ data class VertoDialogParams(
     )
 
 data class AudioParams(
-    val googAutoGainControl: Boolean = false,
-    val googHighpassFilter: Boolean = false,
-    val googNoiseSuppression: Boolean = false
+    val googEchoCancellation:Boolean = true,
+    val googAutoGainControl:Boolean= true,
+    val googNoiseSuppression:Boolean= true,
+    val googHighpassFilter:Boolean= true,
+    val googTypingNoiseDetection:Boolean= true,
+    val googEchoCancellation2:Boolean= false,
+    val googAutoGainControl2:Boolean= false,
 )
 
 class VideoParams
