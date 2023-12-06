@@ -241,7 +241,7 @@ data class VertoDialogParams(
 
 data class AudioParams(
     val googEchoCancellation:Boolean = true,
-    val googAutoGainControl:Boolean= true,
+    val googAutoGainControl:Boolean= false,
     val googNoiseSuppression:Boolean= true,
     val googHighpassFilter:Boolean= true,
     val googTypingNoiseDetection:Boolean= true,

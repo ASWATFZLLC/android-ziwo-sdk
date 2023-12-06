@@ -5,9 +5,9 @@ import com.ziwo.ziwosdk.Call
 import com.ziwo.ziwosdk.Ziwo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.webrtc.*
+import org.webrtc.voiceengine.WebRtcAudioUtils
 
 
 class RTCPeerConnectionFactory  constructor(
@@ -21,6 +21,10 @@ class RTCPeerConnectionFactory  constructor(
     )
 
     private val peerConnectionFactory: PeerConnectionFactory by lazy {
+        // Set hardware audio processing configurations
+        WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
+        WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
+
         //Initialize PeerConnectionFactory globals.
         val initializationOptions = PeerConnectionFactory.InitializationOptions.builder(context)
             .setEnableInternalTracer(ziwo.debug)
@@ -28,7 +32,6 @@ class RTCPeerConnectionFactory  constructor(
 
         PeerConnectionFactory.initialize(initializationOptions)
         PeerConnectionFactory.builder().createPeerConnectionFactory()
-
     }
 
     /** create rtc client trying to connect to outside
@@ -39,6 +42,7 @@ class RTCPeerConnectionFactory  constructor(
         vertoCommandsSender: VertoCommandsSender,
         call: Call,
         ): RtcCollection {
+
 
         var pc: PeerConnection? = null
         // pc observer
@@ -82,16 +86,16 @@ class RTCPeerConnectionFactory  constructor(
         }
 
         // add stream
-        val audioConstraints = MediaConstraints()
-        audioConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
-        val audioSource = peerConnectionFactory.createAudioSource(audioConstraints)
+
+
+        val audioSource = peerConnectionFactory.createAudioSource(getAudioConstraint())
         val localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource)
         val localStream = peerConnectionFactory.createLocalMediaStream("myAndroidAudio")
         localStream.addTrack(localAudioTrack)
         pc.addStream(localStream)
 
         // create the offer
-        pc.createOffer(sdpObserver, audioConstraints)
+        pc.createOffer(sdpObserver, getAudioConstraint())
 
 
         return RtcCollection(
@@ -114,9 +118,9 @@ class RTCPeerConnectionFactory  constructor(
         var pc: PeerConnection? = null
 
         // create audio constrains
-        val audioConstraints = MediaConstraints()
-        audioConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
-        val audioSource = peerConnectionFactory.createAudioSource(audioConstraints)
+        // add stream
+
+        val audioSource = peerConnectionFactory.createAudioSource(getAudioConstraint())
         val localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource)
         val localStream = peerConnectionFactory.createLocalMediaStream("myAndroidAudio")
         localStream.addTrack(localAudioTrack)
@@ -135,7 +139,7 @@ class RTCPeerConnectionFactory  constructor(
                             }
                         }, sdp)
                     }
-                },audioConstraints)
+                },getAudioConstraint())
             }
         }
 
@@ -183,9 +187,8 @@ class RTCPeerConnectionFactory  constructor(
         var pc: PeerConnection? = null
 
         // create audio constrains
-        val audioConstraints = MediaConstraints()
-        audioConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
-        val audioSource = peerConnectionFactory.createAudioSource(audioConstraints)
+
+        val audioSource = peerConnectionFactory.createAudioSource(getAudioConstraint())
         val localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource)
         val localStream = peerConnectionFactory.createLocalMediaStream("myAndroidAudio")
         localStream.addTrack(localAudioTrack)
@@ -202,7 +205,7 @@ class RTCPeerConnectionFactory  constructor(
                             VertoMessageAttachParamsSending(
                                 sdp = pc!!.localDescription.description,
                                 sessid = vertoCommandsSender.vertoWs.sessionId,
-                                dialogParams = VertoDialogParams(
+                                dialogParams =  VertoDialogParams(
                                     callID = call.callId,
                                     login = call.login,
                                     destinationNumber = call.phoneNumber,
@@ -257,9 +260,9 @@ class RTCPeerConnectionFactory  constructor(
                                 super.onCreateSuccess(sdp)
                                 pc!!.setLocalDescription( object : MySdpObserver("Recovering_setLocalDescription", call, ziwo){ }, sdp)
                             }
-                        },audioConstraints)
+                        },getAudioConstraint())
                     }
-                },audioConstraints)
+                },getAudioConstraint())
             }
         }
 
@@ -290,7 +293,22 @@ class RTCPeerConnectionFactory  constructor(
         val pc : PeerConnection,
         val localStream: MediaStream
     )
+    fun getAudioConstraint(): MediaConstraints {
+        val audioParams = AudioParams() // or get from user settings
 
+        val audioConstraints = MediaConstraints()
+        audioConstraints.mandatory.apply {
+            add(MediaConstraints.KeyValuePair("googEchoCancellation", audioParams.googEchoCancellation.toString()))
+            add(MediaConstraints.KeyValuePair("googAutoGainControl", audioParams.googAutoGainControl.toString()))
+            add(MediaConstraints.KeyValuePair("googNoiseSuppression", audioParams.googNoiseSuppression.toString()))
+            add(MediaConstraints.KeyValuePair("googHighpassFilter", audioParams.googHighpassFilter.toString()))
+            add(MediaConstraints.KeyValuePair("googTypingNoiseDetection", audioParams.googTypingNoiseDetection.toString()))
+            add(MediaConstraints.KeyValuePair("googEchoCancellation2", audioParams.googEchoCancellation2.toString()))
+            add(MediaConstraints.KeyValuePair("googAutoGainControl2", audioParams.googAutoGainControl2.toString()))
+            add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+        }
+        return audioConstraints
+    }
 }
 
 
@@ -374,5 +392,7 @@ open class MyPeerConnectionObserver(private val TAG: String, private val call: C
     override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {
         ziwo?.logger(TAG, "onAddTrack $p0 $p1")
     }
+
+
 
 }
