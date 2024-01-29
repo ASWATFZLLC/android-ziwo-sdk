@@ -6,6 +6,7 @@ import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.ziwo.ziwosdk.Ziwo
+import okhttp3.Cache
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -14,6 +15,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -42,6 +44,9 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
     private lateinit var service: ZiwoApiService
 
     private fun buildClient() {
+        val cacheSize = 10 * 1024 * 1024 // 10 MB
+        val cacheDirectory = File(appContext.cacheDir, "http_cache")
+        val cache = Cache(cacheDirectory, cacheSize.toLong())
         val headerInterceptor = HeaderInterceptor(this.accessToken)
         client = OkHttpClient.Builder()
             .readTimeout(15, TimeUnit.SECONDS)  // Increase read timeout
@@ -54,6 +59,7 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
                 .alwaysReadResponseBody(true)
                 .build())
             .addInterceptor(headerInterceptor)
+            .cache(cache)
             .build()
         // Optionally, also rebuild your Retrofit instance to use the new OkHttpClient
         retrofit = Retrofit.Builder()
@@ -239,6 +245,16 @@ class ZiwoApi(private val appContext: Context, private val ziwo: Ziwo) {
     suspend fun getAgents(useCache: Boolean =true, skip: Int = 0): List<ZiwoApiGetAgentsContent>? {
         return try {
             val response = service.getAgents(useCache, skip)
+            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+            response.body()?.content
+        } catch (ex: Exception) {
+            throw ex
+        }
+    }
+
+    suspend fun getCustomers(useCache: Boolean =true, skip: Int = 0): List<ZiwoGetCustomerContentResponse>? {
+        return try {
+            val response = service.getCustomers(useCache, skip,500)
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
             response.body()?.content
         } catch (ex: Exception) {

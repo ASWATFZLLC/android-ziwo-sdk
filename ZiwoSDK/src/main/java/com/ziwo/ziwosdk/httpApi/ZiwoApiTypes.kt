@@ -4,7 +4,7 @@ import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
-
+import java.time.ZonedDateTime
 
 
 enum class AgentStatus(val code: Int){
@@ -90,6 +90,9 @@ data class ZiwoApiGetAgentsResponse(
     val content: List<ZiwoApiGetAgentsContent>?
 )data class ListQueuesResponse(
     val content: List<ListQueuesContent>?
+)
+data class ZiwoApiGetCustomerResponse(
+    val content: List<ZiwoGetCustomerContentResponse>?
 )
 
 @Parcelize
@@ -487,7 +490,22 @@ data class ListQueuesContent(
     val urgentMessage: Any,
     val waitTimeoutDID: String
 )
-
+data class ZiwoGetCustomerContentResponse(
+    val id: String,
+    val firstName: String?="",
+    val lastName: String?="",
+    val title: String?,
+    val gender: String?,
+    val phone: String,
+    val email: String?,
+    val dob: String?,
+    val hasOptedOutMarketing: Boolean,
+    val timezoneId: String?,
+    val tagsCount: Int,
+    val createdAt: String?,
+    val updatedAt: String?,
+    val deletedAt: String?
+)
 class ListQueuesInfo()
 
 

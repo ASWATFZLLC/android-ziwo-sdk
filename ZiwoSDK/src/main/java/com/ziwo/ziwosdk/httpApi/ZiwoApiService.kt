@@ -56,6 +56,10 @@ interface ZiwoApiService {
     suspend fun getAgents(@Header("X-Use-Cache") useCache: Boolean,
         @Query("skip") skip: Int = 0): Response<ZiwoApiGetAgentsResponse>
 
+    @GET("agent/crm/customers")
+    suspend fun getCustomers(@Header("X-Use-Cache") useCache: Boolean,
+                          @Query("skip") skip: Int = 0, @Query("limit") limit: Int = 0): Response<ZiwoApiGetCustomerResponse>
+
     @GET("static/countries")
     suspend fun getCountries(): Response<ZiwoApiCountriesResponse>
     @GET("agents/channels/calls/")
